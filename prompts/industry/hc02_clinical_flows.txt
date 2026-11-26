@@ -1,0 +1,5 @@
+Test cases for the appointment and prescription flows. ≥1 case per listed rule, plus boundary/negative (double-book, past slot, no-show, refill too soon, allergy block, unauthorized role). Expected = exact status/message/field. Don't invent clinical or legal rules; unclear points → Questions (max 5).
+Output only: table ID|Flow|Rule|Type P/N/B|Steps|Expected, then Questions.
+<flows>
+{{hc-clinical-flows.md}}
+</flows>

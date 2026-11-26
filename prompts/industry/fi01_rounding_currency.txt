@@ -1,0 +1,5 @@
+Compute each rounding case with the documented mode and currency exponent. Use decimal/minor-units, never binary float. Output the exact expected string (JPY has no fraction). Don't invent extra rounding modes.
+Output only: JSON array of {id,currency,mode,expected}.
+<cases>
+{{fi-rounding-cases.md}}
+</cases>

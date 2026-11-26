@@ -1,0 +1,5 @@
+Work each pricing case with the documented discount, stacking, and tax rules. Round half-up to the currency exponent after discount, then tax. Give exact expected strings for discount, tax, total. Don't invent coupons or rates.
+Output only: JSON array of {id,discount,tax,total,outcome}.
+<pricing>
+{{ec-discounts-tax.md}}
+</pricing>

@@ -1,0 +1,5 @@
+Concurrency tests for inventory. Required: N buyers race for the last unit — exactly one checkout succeeds, others get out_of_stock, stock decreases by 1; reservation expiry releases stock; sold-out between cart and pay; concurrent one-per-customer coupon. Don't invent warehouse rules.
+Output only: table ID|Scenario|Concurrency|Assertions (exact counts/statuses), max 12 rows.
+<inventory>
+{{ec-inventory-race.md}}
+</inventory>
