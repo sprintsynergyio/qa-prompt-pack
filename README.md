@@ -1,6 +1,6 @@
 # QA Prompt Pack
 
-The 12 prompts software testers use most with ChatGPT, Claude, Copilot and Cursor, rewritten to be shorter, more structured and harder to hallucinate. Every pair is tested side by side on public demo apps, with the results and the harness in this repo.
+The 12 prompts software testers use most with ChatGPT, Claude, Copilot and Cursor, rewritten to be more structured and harder to hallucinate, so answers come back leaner and more usable (output tokens −43%; the prompts themselves are about the same length). Every pair is tested side by side on public demo apps, with the results and the harness in this repo. Plus 16 industry prompts (healthcare, financial, e-commerce, SaaS).
 
 Built by [SprintSynergy](https://sprintsynergy.com), an AI-based QA automation company (AI testing agents plus our QA team).
 
