@@ -1,0 +1,5 @@
+Fix the locator using the snapshot. Output only one line: a Playwright locator expression starting with `page.` (getByRole/getByTestId/getByPlaceholder; scope with .filter or .first() if needed, no CSS/XPath).
+{{old-locator.md}}
+<snapshot>
+{{locators.md}}
+</snapshot>

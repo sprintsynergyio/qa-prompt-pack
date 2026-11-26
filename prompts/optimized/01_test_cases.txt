@@ -1,0 +1,5 @@
+Test cases for this requirement. ≥1 per rule plus implied boundary/negative cases. Expected = exact observable text/count/URL/state. Don't invent rules; list unclear points as Questions (max 5).
+Output only: table ID|Rule|Type P/N/B|Steps|Expected, then Questions.
+<req>
+{{requirement.md}}
+</req>

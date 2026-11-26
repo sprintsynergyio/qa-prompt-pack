@@ -1,0 +1,5 @@
+k6 script: 50 VUs, 5m, thresholds http_req_duration p(95)<800 and http_req_failed rate<0.01, sleep 1-3s random between requests, check() each status.
+Output: one ```js block.
+<journey>
+{{load-journey.md}}
+</journey>

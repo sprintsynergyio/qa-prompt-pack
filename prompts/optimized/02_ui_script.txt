@@ -1,0 +1,8 @@
+Playwright TS test for the journey. Locators only from the snapshot (getByRole/getByPlaceholder/getByTestId); no waitForTimeout/CSS/XPath; expect() after each state change; page.goto('/todomvc/#/').
+Output only one ```ts block.
+<journey>
+{{journey.md}}
+</journey>
+<snapshot>
+{{locators.md}}
+</snapshot>

@@ -1,0 +1,5 @@
+Edge-case inputs: empty/whitespace, trim, length extremes, unicode/emoji/RTL, HTML/script, edit mode. Undefined expectation → "?".
+Output: table #|Input|Action|Expected, ≤20 rows.
+<spec>
+{{field-spec.md}}
+</spec>

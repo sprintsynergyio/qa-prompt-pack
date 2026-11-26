@@ -1,0 +1,5 @@
+1-week test plan, 1 QA, for this scope. Output only:
+Scope (in/out) · Risks ranked (max 5) · Test types per area (table Area|Type|Manual/Auto|Priority) · Schedule by day · Exit criteria (measurable).
+<scope>
+{{requirement.md}}
+</scope>

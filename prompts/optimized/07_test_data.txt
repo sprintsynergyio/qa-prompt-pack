@@ -1,0 +1,5 @@
+Payloads: 10 valid (both ends of each range), 10 invalid (one rule broken each).
+Output: JSON array of {case,valid,payload}.
+<schema>
+{{data-schema.md}}
+</schema>

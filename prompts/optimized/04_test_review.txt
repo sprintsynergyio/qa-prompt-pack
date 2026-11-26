@@ -1,0 +1,9 @@
+Review this Playwright test. Output only:
+1. Table Line|Sev H/M/L|Issue|Fix (max 8, flakiness and false passes first)
+2. Fixed test, one ```ts block, locators from the snapshot.
+<test>
+{{review-target.spec.ts}}
+</test>
+<snapshot>
+{{locators.md}}
+</snapshot>

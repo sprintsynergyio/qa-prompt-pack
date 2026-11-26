@@ -1,0 +1,6 @@
+node_modules/
+eval/harness/gen/
+eval/harness/test-results/
+runs/
+.venv/
+__pycache__/

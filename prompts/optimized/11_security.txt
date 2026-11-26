@@ -1,0 +1,5 @@
+Security checks for this app's real attack surface only (it has no backend/auth: skip items that don't apply and say why in one line).
+Output only: table Risk|Test (exact input/step)|Expected safe result, max 10 rows.
+<app>
+{{requirement.md}}
+</app>

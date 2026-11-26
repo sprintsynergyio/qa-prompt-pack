@@ -1,0 +1,9 @@
+Write a web application security testing checklist based on the OWASP Top 10 (2021) for this app:
+{{requirement.md}}
+
+Include test categories, example vulnerabilities, and methods to validate each (e.g., SQL injection, XSS, broken authentication).
+Format as a table with:
+Risk Category
+Example Issue
+Test Description
+Tool or Method

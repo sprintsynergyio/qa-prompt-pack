@@ -1,0 +1,2 @@
+Help me create a test plan for my next release. This is the release scope: {{requirement.md}}
+Timeframe: 1 week, 1 QA engineer.

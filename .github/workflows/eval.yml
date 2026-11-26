@@ -1,0 +1,61 @@
+name: prompt-eval
+on:
+  workflow_dispatch:
+    inputs:
+      runs: { description: "runs per prompt variant", default: "3" }
+      model: { description: "generation model", default: "openai/gpt-4o-mini" }
+      judge: { description: "judge model", default: "openai/gpt-4.1" }
+      tasks: { description: "comma list of task numbers (e.g. 06,09); empty = all", default: "" }
+  pull_request:
+    branches: [main]
+    paths: ["prompts/**", "inputs/**", "eval/**", ".github/workflows/eval.yml"]
+permissions:
+  contents: read
+  models: read          # lets GITHUB_TOKEN call GitHub Models (free tier)
+concurrency:
+  group: prompt-eval-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      RUNS: ${{ inputs.runs || '3' }}
+      MODEL: ${{ inputs.model || 'openai/gpt-4o-mini' }}
+      JUDGE: ${{ inputs.judge || 'openai/gpt-4.1' }}
+      TASKS: ${{ inputs.tasks || '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r eval/requirements.txt
+      - run: cd eval/harness && npm ci && npx playwright install --with-deps chromium
+      - name: Install k6
+        run: |
+          curl -sL https://github.com/grafana/k6/releases/download/v0.54.0/k6-v0.54.0-linux-amd64.tar.gz | tar xz
+          echo "K6_BIN=$PWD/k6-v0.54.0-linux-amd64/k6" >> $GITHUB_ENV
+      - run: python eval/count_tokens.py
+      - name: Check GitHub Models access
+        env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
+        run: |
+          curl -sS -w "\nHTTP %{http_code}\n" -H "Authorization: Bearer $GITHUB_TOKEN" -H "Content-Type: application/json" \
+            https://models.github.ai/inference/chat/completions \
+            -d "{\"model\":\"$MODEL\",\"messages\":[{\"role\":\"user\",\"content\":\"reply ok\"}],\"max_tokens\":5}"
+      - name: Run eval
+        env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
+        run: |
+          ARGS="--runs $RUNS --model $MODEL --judge $JUDGE"
+          if [ -n "$TASKS" ]; then ARGS="$ARGS --tasks $TASKS"; fi
+          python eval/run_eval.py $ARGS
+      - name: Summarize
+        if: always()
+        run: python eval/summarize.py || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-results
+          path: |
+            results/
+            runs/

@@ -1,0 +1,15 @@
+This E2E test is flaky — it passes ~70% of the time with no code changes:
+
+Test name: completes the todo
+Framework: Playwright (TypeScript)
+Test code:
+{{flaky.spec.ts}}
+
+Failure message when it fails:
+{{flaky.log}}
+
+Analyze this test and:
+1. List the most likely root causes in order of probability
+2. For each cause, describe a specific symptom that confirms it
+3. Suggest a concrete fix for each
+4. Identify any missing waits, race conditions, or environment dependencies

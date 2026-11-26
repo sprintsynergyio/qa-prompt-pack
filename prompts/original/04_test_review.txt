@@ -1,0 +1,14 @@
+Review this Playwright test file for quality and maintainability:
+
+```typescript
+{{review-target.spec.ts}}
+```
+
+Evaluate and report on:
+1. **Anti-patterns** — list each one with the line number and why it's a problem
+2. **Selector quality** — flag any brittle selectors (CSS classes, XPath, index-based) and suggest robust alternatives
+3. **Assertion coverage** — identify missing or weak assertions that reduce test value
+4. **Test isolation** — flag shared state, missing setup/teardown, or dependency between tests
+5. **Readability** — flag unclear test names, missing comments on non-obvious steps, or overly long tests
+
+For each issue: give severity (High / Medium / Low), the problem, and a concrete fix.

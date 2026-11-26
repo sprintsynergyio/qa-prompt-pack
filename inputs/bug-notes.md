@@ -1,0 +1,1 @@
+todomvc demo - added like 3 todos, ticked one, hit clear completed, then the counter said "1 items left" instead of "1 item left"?? also after refresh one of the cleared ones came back i think. chrome on my mac. happened twice
