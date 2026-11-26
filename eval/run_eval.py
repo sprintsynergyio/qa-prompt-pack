@@ -18,7 +18,7 @@ def call(model, prompt, max_tokens=3000, min_gap=6.0, temperature=0.2):
     """POST with pacing (min_gap s between calls) and backoff on 429/5xx. Never logs the token."""
     body = json.dumps({"model": model, "temperature": temperature, "max_tokens": max_tokens,
                        "messages": [{"role": "user", "content": prompt}]}).encode()
-    hdr = {"Authorization": "Bearer " + (os.environ.get("MODELS_API_KEY") or os.environ["GITHUB_TOKEN"]), "Content-Type": "application/json", "Accept": "application/json"}
+    hdr = {"Authorization": "Bearer " + (os.environ.get("MODELS_API_KEY") or os.environ["GITHUB_TOKEN"]), "Content-Type": "application/json", "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"}
     for attempt in range(8):
         wait = _last[0] + min_gap - time.time()
         if wait > 0: time.sleep(wait)
@@ -225,4 +225,7 @@ def main():
         w = csv.DictWriter(fh, fieldnames=keys); w.writeheader(); w.writerows(rows)
     (ROOT/"results"/"errors.txt").write_text("\n".join(errors))
     print(f"wrote results_quality.csv ({len(rows)} rows); {len(errors)} errors")
+    gen_fail = [e for e in errors if not e.startswith("judge")]
+    if not a.score_only and not rows:
+        sys.exit(f"FAILED: all {len(gen_fail)} generation calls failed; first error: {gen_fail[0] if gen_fail else 'n/a'}")
 if __name__ == "__main__": main()

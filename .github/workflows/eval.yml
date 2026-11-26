@@ -47,6 +47,11 @@ jobs:
           code=$(curl -sS -o resp.json -w "%{http_code} %{content_type}" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
             "$MODELS_URL" -d "{\"model\":\"$MODEL\",\"messages\":[{\"role\":\"user\",\"content\":\"reply ok\"}],\"max_tokens\":5}")
           echo "endpoint: $MODELS_URL -> $code"; head -c 300 resp.json; echo
+          echo "--- env proxies (names only):"; env | grep -i '_proxy' | cut -d= -f1 || echo none
+          echo "--- full response headers, official GitHub headers:"
+          curl -sS -D - -o /dev/null -H "Authorization: Bearer $KEY" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" \
+            -H "Content-Type: application/json" "$MODELS_URL" -d "{\"model\":\"$MODEL\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}]}" | grep -vi '^set-cookie'
+          echo "--- catalog:"; curl -sS -w " [HTTP %{http_code} %{content_type}]\n" https://models.github.ai/catalog/models | head -c 300; echo
           python -c "import json;d=json.load(open('resp.json'));print('completion:',d['choices'][0]['message']['content'])" \
             || { echo "::error::$MODELS_URL did not return a chat completion. GitHub Models was retired on 30 Jul 2026; set secret MODELS_API_KEY and variable MODELS_URL."; exit 1; }
       - name: Run eval
