@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""A/B evaluation of original vs optimized QA prompts on GitHub Models (free tier).
+"""A/B evaluation of original vs optimized QA prompts on any OpenAI-compatible chat-completions endpoint
+(MODELS_URL + MODELS_API_KEY; e.g. OpenAI https://api.openai.com/v1/chat/completions or a Microsoft Foundry endpoint).
+Note: GitHub Models (models.github.ai) was retired on 30 Jul 2026 and now answers "OK" with no completion.
 Usage: .venv/bin/python run_eval.py [--runs 3] [--model openai/gpt-4o-mini] [--judge openai/gpt-4.1] [--tasks 01,02] [--variants original,optimized] [--score-only] [--no-judge]
 Token is read from GITHUB_TOKEN and never printed. Outputs: runs/outputs/*, results_quality.csv, results_summary.json"""
 import argparse, csv, json, os, pathlib, random, re, subprocess, sys, time, urllib.request, urllib.error
@@ -16,7 +18,7 @@ def call(model, prompt, max_tokens=3000, min_gap=6.0, temperature=0.2):
     """POST with pacing (min_gap s between calls) and backoff on 429/5xx. Never logs the token."""
     body = json.dumps({"model": model, "temperature": temperature, "max_tokens": max_tokens,
                        "messages": [{"role": "user", "content": prompt}]}).encode()
-    hdr = {"Authorization": "Bearer " + os.environ["GITHUB_TOKEN"], "Content-Type": "application/json", "Accept": "application/json"}
+    hdr = {"Authorization": "Bearer " + (os.environ.get("MODELS_API_KEY") or os.environ["GITHUB_TOKEN"]), "Content-Type": "application/json", "Accept": "application/json"}
     for attempt in range(8):
         wait = _last[0] + min_gap - time.time()
         if wait > 0: time.sleep(wait)
@@ -24,7 +26,7 @@ def call(model, prompt, max_tokens=3000, min_gap=6.0, temperature=0.2):
         try:
             t = time.time(); resp = urllib.request.urlopen(urllib.request.Request(URL, body, hdr), timeout=240); raw = resp.read()
             if "json" not in (resp.headers.get("Content-Type") or ""):
-                raise RuntimeError(f"endpoint returned non-JSON ({resp.headers.get('Content-Type')}: {raw[:40]!r}); network/proxy is not reaching GitHub Models")
+                raise RuntimeError(f"endpoint returned non-JSON ({resp.headers.get('Content-Type')}: {raw[:40]!r}); not a chat-completions endpoint (GitHub Models was retired 30 Jul 2026; set MODELS_URL/MODELS_API_KEY)")
             d = json.loads(raw)
             u = d.get("usage", {})
             return d["choices"][0]["message"]["content"] or "", u.get("prompt_tokens"), u.get("completion_tokens"), round(time.time()-t, 1)
@@ -172,7 +174,7 @@ def main():
     ap.add_argument("--runs", type=int, default=3); ap.add_argument("--model", default="openai/gpt-4o-mini"); ap.add_argument("--judge", default="openai/gpt-4.1")
     ap.add_argument("--tasks"); ap.add_argument("--variants", default="original,optimized"); ap.add_argument("--score-only", action="store_true"); ap.add_argument("--no-judge", action="store_true")
     a = ap.parse_args()
-    if not os.environ.get("GITHUB_TOKEN"): sys.exit("GITHUB_TOKEN not set")
+    if not (os.environ.get("MODELS_API_KEY") or os.environ.get("GITHUB_TOKEN")): sys.exit("set MODELS_API_KEY (and MODELS_URL) for an OpenAI-compatible endpoint")
     tasks = sorted(p.stem for p in (ROOT/"prompts"/"original").glob("*.txt"))
     if a.tasks: tasks = [t for t in tasks if t[:2] in a.tasks.split(",")]
     variants = a.variants.split(",")

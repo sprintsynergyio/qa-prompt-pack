@@ -11,7 +11,7 @@ on:
     paths: ["prompts/**", "inputs/**", "eval/**", ".github/workflows/eval.yml"]
 permissions:
   contents: read
-  models: read          # lets GITHUB_TOKEN call GitHub Models (free tier)
+  models: read          # kept for GitHub Models compatibility (service retired 30 Jul 2026; use MODELS_URL/MODELS_API_KEY)
 concurrency:
   group: prompt-eval-${{ github.ref }}
   cancel-in-progress: false
@@ -24,6 +24,7 @@ jobs:
       MODEL: ${{ inputs.model || 'openai/gpt-4o-mini' }}
       JUDGE: ${{ inputs.judge || 'openai/gpt-4.1' }}
       TASKS: ${{ inputs.tasks || '' }}
+      MODELS_URL: ${{ vars.MODELS_URL || 'https://models.github.ai/inference/chat/completions' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -37,14 +38,21 @@ jobs:
           curl -sL https://github.com/grafana/k6/releases/download/v0.54.0/k6-v0.54.0-linux-amd64.tar.gz | tar xz
           echo "K6_BIN=$PWD/k6-v0.54.0-linux-amd64/k6" >> $GITHUB_ENV
       - run: python eval/count_tokens.py
-      - name: Check GitHub Models access
-        env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
+      - name: Check model endpoint returns a chat completion
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          MODELS_API_KEY: "${{ secrets.MODELS_API_KEY }}"
         run: |
-          curl -sS -w "\nHTTP %{http_code}\n" -H "Authorization: Bearer $GITHUB_TOKEN" -H "Content-Type: application/json" \
-            https://models.github.ai/inference/chat/completions \
-            -d "{\"model\":\"$MODEL\",\"messages\":[{\"role\":\"user\",\"content\":\"reply ok\"}],\"max_tokens\":5}"
+          KEY="${MODELS_API_KEY:-$GITHUB_TOKEN}"
+          code=$(curl -sS -o resp.json -w "%{http_code} %{content_type}" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
+            "$MODELS_URL" -d "{\"model\":\"$MODEL\",\"messages\":[{\"role\":\"user\",\"content\":\"reply ok\"}],\"max_tokens\":5}")
+          echo "endpoint: $MODELS_URL -> $code"; head -c 300 resp.json; echo
+          python -c "import json;d=json.load(open('resp.json'));print('completion:',d['choices'][0]['message']['content'])" \
+            || { echo "::error::$MODELS_URL did not return a chat completion. GitHub Models was retired on 30 Jul 2026; set secret MODELS_API_KEY and variable MODELS_URL."; exit 1; }
       - name: Run eval
-        env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          MODELS_API_KEY: "${{ secrets.MODELS_API_KEY }}"
         run: |
           ARGS="--runs $RUNS --model $MODEL --judge $JUDGE"
           if [ -n "$TASKS" ]; then ARGS="$ARGS --tasks $TASKS"; fi

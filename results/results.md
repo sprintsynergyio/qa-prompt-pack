@@ -1,13 +1,10 @@
 # Prompt Pack results
 Status 26 Nov 2026, 7:30 PM PKT
 
-## Output quality: NOT MEASURED
-The run against GitHub Models could not happen from the box. The box's network proxy answers every request to `models.github.ai` with `200 text/plain "OK"` (no model output, even without a token). The older `models.inference.ai.azure.com` host doesn't connect at all. Other hosts (api.openai.com, api.github.com) behave normally, so this is a block on that specific host, not a bad token. No model output exists, so there are no quality scores, judge verdicts, winners or losers yet. Nothing has been invented here.
+## Output quality: NOT MEASURED YET
+The first eval run on GitHub Actions (https://github.com/sprintsynergyio/qa-prompt-pack/actions/runs/45854931101) got `HTTP 200 text/plain "OK"` from `models.github.ai` for all 72 generation calls, with no completions, so it produced 0 scored outputs. GitHub Models was retired on 30 Jul 2026 (https://github.blog/changelog/2026-07-30-github-models-is-now-retired/), and its endpoint no longer serves completions. The harness now points at any OpenAI-compatible endpoint through `MODELS_URL` + `MODELS_API_KEY`, and the workflow fails loudly if the endpoint doesn't return a completion.
 
-The eval is ready to run anywhere that can reach GitHub Models:
-- `run_eval.py`: GitHub Models, 3 runs per variant, 6 s pacing between calls, backoff on 429/5xx with Retry-After, stops on a daily-limit response. A blind, order-randomized judge (openai/gpt-4.1) scores each run pair. It fails loudly if the endpoint returns non-JSON.
-- Deterministic scores per prompt (0–1): tsc compile + live Playwright pass rate + banned patterns (UI/API/review/flaky); requirement coverage (test cases, test plan); edge-case coverage; bug-report fields + invented versions + "Unknown" marking; JSON validity + valid/invalid split (test data); `k6 inspect` + options/thresholds (load); relevant vs irrelevant security rows; live locator check on the real TodoMVC page (locator fix).
-- Self-test on hand-written answers (not model output): grounded UI test 1.0, made-up Playwright API 0.2 (tsc fails), API reference 1.0, k6 reference 1.0, Playwright and CSS locators 1.0, wrong locator 0.2. See `runs/selftest/selftest_results.txt`.
+Scoring is deterministic: tsc + live Playwright, `k6 inspect`, a live locator check, coverage and invented-detail checks. A blind judge model also grades each pair. The self-test on hand-written answers is in `eval/selftest/`.
 
 ## Token savings (measured, tiktoken o200k_base)
 "Instruction" = the prompt text without the shared input. "Full prompt" = what is actually sent.
@@ -35,4 +32,4 @@ How to read this:
 - The bet is fewer output tokens and fewer failed or invented outputs. That part needs the model run.
 
 ## To finish
-Run `.github/workflows/eval.yml` (manual trigger) in the future `sprintsynergyio/qa-prompt-pack` repo. In GitHub Actions, `GITHUB_TOKEN` with `permissions: models: read` calls GitHub Models directly. Alternatively, run `python run_eval.py --runs 3` on any machine with normal internet access. Expected budget: 72 generation calls (gpt-4o-mini, low tier: 15/min, 150/day) + 36 judge calls (gpt-4.1, high tier: 10/min, 50/day). That fits one day's free quota.
+Add a model key, either an OpenAI API key with gpt-4o-mini (cheapest) or a Microsoft Foundry deployment, as repo secret `MODELS_API_KEY`, with variable `MODELS_URL`. Then re-run **prompt-eval**. Roughly 108 calls per full run (72 generation + 36 judge).

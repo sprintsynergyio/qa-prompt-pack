@@ -23,7 +23,7 @@ Built by [SprintSynergy](https://sprintsynergy.com), an AI-based QA automation c
 - `prompts/original/`: the popular version, quoted with credit (see [SOURCES.md](SOURCES.md))
 - `prompts/optimized/`: our version, copy-paste ready. Replace the `{{file}}` slot with your own input.
 - `inputs/`: the shared test input: [TodoMVC demo](https://demo.playwright.dev/todomvc/) (real DOM and Playwright aria snapshot) and the [JSONPlaceholder](https://jsonplaceholder.typicode.com) API
-- `eval/`: the A/B harness (GitHub Models, blind judge, deterministic checks)
+- `eval/`: the A/B harness (any OpenAI-compatible model endpoint, blind judge, deterministic checks)
 - `results/`: token counts and quality results
 - `research/`: source × task matrix
 
@@ -46,12 +46,12 @@ Each prompt pair runs 3 times on the same input. Scoring:
 
 Token counts use `tiktoken` (o200k_base) plus the API's own usage numbers.
 
-Run it yourself: trigger **Actions → prompt-eval** (uses the free GitHub Models tier through `GITHUB_TOKEN`), or locally:
+Run it yourself: set the repo secret `MODELS_API_KEY` and variable `MODELS_URL` (any OpenAI-compatible chat-completions endpoint), then trigger **Actions → prompt-eval**, or run locally:
 ```bash
 pip install -r eval/requirements.txt
 (cd eval/harness && npm install && npx playwright install chromium)
 python eval/count_tokens.py
-GITHUB_TOKEN=... K6_BIN=/path/to/k6 python eval/run_eval.py --runs 3
+MODELS_URL=https://api.openai.com/v1/chat/completions MODELS_API_KEY=... K6_BIN=/path/to/k6 python eval/run_eval.py --runs 3
 ```
 
 ## Results
