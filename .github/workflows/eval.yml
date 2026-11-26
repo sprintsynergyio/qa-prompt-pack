@@ -3,15 +3,15 @@ on:
   workflow_dispatch:
     inputs:
       runs: { description: "runs per prompt variant", default: "3" }
-      model: { description: "generation model", default: "openai/gpt-4o-mini" }
-      judge: { description: "judge model", default: "openai/gpt-4.1" }
-      tasks: { description: "comma list of task numbers (e.g. 06,09); empty = all", default: "" }
+      model: { description: "generation model", default: "claude-haiku-5-5" }
+      judge: { description: "judge model", default: "claude-sonnet-5-5" }
+      tasks: { description: "comma list of task ids; empty = all", default: "" }
   pull_request:
     branches: [main]
-    paths: ["prompts/**", "inputs/**", "eval/**", ".github/workflows/eval.yml"]
+    paths: ["prompts/original/**", "prompts/optimized/**", "inputs/**", "eval/**", ".github/workflows/eval.yml"]
 permissions:
   contents: read
-  models: read          # kept for GitHub Models compatibility (service retired 30 Jul 2026; use MODELS_URL/MODELS_API_KEY)
+  models: read          # harmless; GitHub Models itself was retired on 30 Jul 2026
 concurrency:
   group: prompt-eval-${{ github.ref }}
   cancel-in-progress: false
@@ -21,10 +21,11 @@ jobs:
     timeout-minutes: 180
     env:
       RUNS: ${{ inputs.runs || '3' }}
-      MODEL: ${{ inputs.model || 'openai/gpt-4o-mini' }}
-      JUDGE: ${{ inputs.judge || 'openai/gpt-4.1' }}
+      MODEL: ${{ inputs.model || 'claude-haiku-5-5' }}
+      JUDGE: ${{ inputs.judge || 'claude-sonnet-5-5' }}
       TASKS: ${{ inputs.tasks || '' }}
-      MODELS_URL: ${{ vars.MODELS_URL || 'https://models.github.ai/inference/chat/completions' }}
+      MODELS_URL: ${{ vars.MODELS_URL || 'https://api.openai.com/v1/chat/completions' }}
+      BUDGET_USD: ${{ vars.BUDGET_USD || '3' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -38,35 +39,30 @@ jobs:
           curl -sL https://github.com/grafana/k6/releases/download/v0.54.0/k6-v0.54.0-linux-amd64.tar.gz | tar xz
           echo "K6_BIN=$PWD/k6-v0.54.0-linux-amd64/k6" >> $GITHUB_ENV
       - run: python eval/count_tokens.py
-      - name: Check model endpoint returns a chat completion
+      - name: Scorer selftest (no models)
+        run: python eval/selftest.py
+      - name: Model key present?
+        id: keys
         env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-          MODELS_API_KEY: "${{ secrets.MODELS_API_KEY }}"
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          MODELS_API_KEY: ${{ secrets.MODELS_API_KEY }}
         run: |
-          KEY="${MODELS_API_KEY:-$GITHUB_TOKEN}"
-          code=$(curl -sS -o resp.json -w "%{http_code} %{content_type}" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
-            "$MODELS_URL" -d "{\"model\":\"$MODEL\",\"messages\":[{\"role\":\"user\",\"content\":\"reply ok\"}],\"max_tokens\":5}")
-          echo "endpoint: $MODELS_URL -> $code"; head -c 300 resp.json; echo
-          echo "--- env proxies (names only):"; env | grep -i '_proxy' | cut -d= -f1 || echo none
-          echo "--- full response headers, official GitHub headers:"
-          curl -sS -D - -o /dev/null -H "Authorization: Bearer $KEY" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" \
-            -H "Content-Type: application/json" "$MODELS_URL" -d "{\"model\":\"$MODEL\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}]}" | grep -vi '^set-cookie'
-          echo "--- catalog:"; curl -sS -w " [HTTP %{http_code} %{content_type}]\n" https://models.github.ai/catalog/models | head -c 300; echo
-          python -c "import json;d=json.load(open('resp.json'));print('completion:',d['choices'][0]['message']['content'])" \
-            || { echo "::error::$MODELS_URL did not return a chat completion. GitHub Models was retired on 30 Jul 2026; set secret MODELS_API_KEY and variable MODELS_URL."; exit 1; }
+          if [ -n "$ANTHROPIC_API_KEY$MODELS_API_KEY" ]; then echo "ok=true" >> $GITHUB_OUTPUT
+          else echo "ok=false" >> $GITHUB_OUTPUT; echo "::notice::No ANTHROPIC_API_KEY or MODELS_API_KEY secret; skipping model calls. Committed results come from local runs (see results/)."; fi
       - name: Run eval
+        if: steps.keys.outputs.ok == 'true'
         env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-          MODELS_API_KEY: "${{ secrets.MODELS_API_KEY }}"
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          MODELS_API_KEY: ${{ secrets.MODELS_API_KEY }}
         run: |
-          ARGS="--runs $RUNS --model $MODEL --judge $JUDGE"
+          ARGS=" --runs $RUNS --model $MODEL --judge $JUDGE"
           if [ -n "$TASKS" ]; then ARGS="$ARGS --tasks $TASKS"; fi
           python eval/run_eval.py $ARGS
       - name: Summarize
-        if: always()
-        run: python eval/summarize.py || true
+        if: steps.keys.outputs.ok == 'true'
+        run: python eval/summarize.py  || true
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: steps.keys.outputs.ok == 'true'
         with:
           name: eval-results
           path: |

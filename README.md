@@ -46,16 +46,19 @@ Each prompt pair runs 3 times on the same input. Scoring:
 
 Token counts use `tiktoken` (o200k_base) plus the API's own usage numbers.
 
-Run it yourself: set the repo secret `MODELS_API_KEY` and variable `MODELS_URL` (any OpenAI-compatible chat-completions endpoint), then trigger **Actions → prompt-eval**, or run locally:
+Run it yourself. Locally with Claude (default models `claude-haiku-5-5` for generation, `claude-sonnet-5-5` as judge):
 ```bash
 pip install -r eval/requirements.txt
 (cd eval/harness && npm install && npx playwright install chromium)
 python eval/count_tokens.py
-MODELS_URL=https://api.openai.com/v1/chat/completions MODELS_API_KEY=... K6_BIN=/path/to/k6 python eval/run_eval.py --runs 3
+export ANTHROPIC_API_KEY=...            # never commit it
+BUDGET_USD=3 K6_BIN=/path/to/k6 python eval/run_eval.py --runs 3   # stops before exceeding BUDGET_USD (spend in runs/spend.json or SPEND_FILE)
+python eval/summarize.py
 ```
+Options: `EVAL_MODEL` / `EVAL_JUDGE` (or `--model` / `--judge`), `--tasks 07,09`, `--score-only` (re-score and judge only new outputs), and `--judge-spec original` (judge against the original prompt text instead of the neutral task in `eval/judge_tasks.py`). Any other model id goes to an OpenAI-compatible endpoint: `MODELS_URL` + `MODELS_API_KEY`. On GitHub, add the repo secret `ANTHROPIC_API_KEY` (or `MODELS_API_KEY`) and trigger **Actions → prompt-eval**. Without a secret, the workflow runs only the self-test.
 
 ## Results
-See [results/results.md](results/results.md). Where it breaks is listed there too: prompts where the short version doesn't win, and why.
+See [results/results.md](results/results.md). Headline: blind judge prefers the optimized prompt in 28 of 36 pairs (3 for the original); deterministic checks 0.877 → 0.951; output tokens −43%. Where it breaks and what we fixed is listed there too.
 
 ## License
 MIT for everything we wrote (optimized prompts, inputs, harness, results). The quoted originals belong to their authors; see [SOURCES.md](SOURCES.md).
