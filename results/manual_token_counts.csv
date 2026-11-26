@@ -1,0 +1,7 @@
+task,instr_orig,input_orig,input_orig_cl100k,instr_opt,input_opt,input_opt_cl100k,instr_saving_pct,input_saving_pct
+m01_exploratory_charters,65,327,332,110,372,375,-69.2,-13.8
+m02_regression_checklist,114,316,317,86,288,291,24.6,8.9
+m03_run_summary,25,300,302,103,379,387,-312.0,-26.3
+m04_ac_review,265,384,386,86,205,207,67.5,46.6
+m05_browser_matrix,,,,93,314,308,,
+TOTAL,,,,478,1558,1568,,

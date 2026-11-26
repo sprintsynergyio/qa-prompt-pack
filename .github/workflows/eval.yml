@@ -8,7 +8,7 @@ on:
       tasks: { description: "comma list of task ids; empty = all", default: "" }
   pull_request:
     branches: [main]
-    paths: ["prompts/original/**", "prompts/optimized/**", "inputs/**", "eval/**", ".github/workflows/eval.yml"]
+    paths: ["prompts/original/**", "prompts/optimized/**", "prompts/manual/**", "inputs/**", "eval/**", ".github/workflows/eval.yml"]
 permissions:
   contents: read
   models: read          # harmless; GitHub Models itself was retired on 30 Jul 2026
@@ -41,6 +41,8 @@ jobs:
       - run: python eval/count_tokens.py
       - name: Scorer selftest (no models)
         run: python eval/selftest.py
+      - name: Manual scorer selftest (no models)
+        run: python eval/manual_selftest.py
       - name: Model key present?
         id: keys
         env:

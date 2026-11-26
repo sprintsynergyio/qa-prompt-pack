@@ -1,0 +1,5 @@
+Regression checklist for this release. Map every change ID to checks; a change with no user-facing effect gets one line saying why it's skipped. Add a smoke pass of the critical paths. Fit the time box. Don't invent changes or behavior; unclear impact → Questions.
+Output only: table ID|Change|Scenario|Expected|Priority P0/P1/P2, then Questions (max 4).
+<release>
+{{m-release-changes.md}}
+</release>

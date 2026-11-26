@@ -1,0 +1,4 @@
+Review these acceptance criteria before testing. Per AC: Testable / Needs revision / Not testable + the exact words at fault. Then: contradictions between ACs, missing cases (errors, boundaries, roles, channels), Questions for the product owner (max 6, most blocking first), and the failing ACs rewritten as Given/When/Then. Don't invent rules; put choices in Questions.
+<story>
+{{m-story-acs.md}}
+</story>

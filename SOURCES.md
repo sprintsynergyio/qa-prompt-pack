@@ -23,3 +23,15 @@ The files in `prompts/industry/` were written for this pack and are covered by t
 
 If a short, credited public original is added later, place it in `prompts/industry-original/` with the same filename; the harness will then run a blind original-vs-optimized judge for that task only.
 
+
+## Manual testing pack (v0.3)
+The files in `prompts/manual/original/` are popular public prompts, quoted for side-by-side comparison with our synthetic input in the placeholder slot. They belong to their authors and are **not** covered by this repo's MIT license.
+
+| File | Source | Notes |
+|---|---|---|
+| m01_exploratory_charters | AlwaysQA prompt library, "Create exploratory testing charters", https://alwaysqa.com/prompt-library/exploratory-testing/ | verbatim, `[DESCRIBE FEATURE OR PAGE]` filled |
+| m02_regression_checklist | QATechTools, "How to Create Regression Test Ideas from Release Notes with AI" (8 Jul 2026), https://qatechtools.com/2026/07/08/how-to-create-regression-test-ideas-from-release-notes-with-ai/ | steps 1 and 3 run as one prompt (the article's step 2 table review is skipped, as in one-shot use) |
+| m03_run_summary | Revive Techno, "10 ChatGPT Prompts for Software Testers", prompt 8, https://www.revivetechno.com/blogs/10-chatgpt-prompts-every-software-tester-should-bookmark | verbatim, `[paste results]` filled |
+| m04_ac_review | AgenticSkillset.org, "The AC Testability Audit Prompt", https://agenticskillset.org/en/topics/evaluating-acceptance-criteria-for-testability/ | verbatim; story and ACs are one input file, so the ACs slot says "(included with the story above)" |
+
+`prompts/manual/optimized/m05_browser_matrix.txt` has no short public original we could quote, so it's scored standalone (domain checks + absolute judge), like the industry pack. All manual inputs (`inputs/m-*.md`) are synthetic, fictional apps.

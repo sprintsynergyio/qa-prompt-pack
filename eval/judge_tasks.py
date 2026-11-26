@@ -18,6 +18,10 @@ NEUTRAL = {
  "10_load_script": ("Write a k6 load script for this journey: 50 VUs for 5 minutes, thresholds p95 < 800 ms and error rate < 1%, random 1-3 s think time, status checks. Must run as-is.", ["load-journey.md"]),
  "11_security": ("Write a security test checklist for this specific app (OWASP Top 10 2021 as the frame): concrete tests with steps/inputs and expected safe results, relevant to the app's actual attack surface rather than generic items that cannot apply.", ["requirement.md"]),
  "12_locator_fix": ("Replace the failing locator with one stable locator for the target element on the current page (HTML and aria snapshot given). Any mainstream framework syntax is acceptable; judge whether it uniquely and stably matches the target on the real page.", ["old-locator.md", "dom.html", "locators.md"]),
+ "m01_exploratory_charters": ("Write exploratory testing charters a manual tester can run for this feature in the time available: risk-ranked, each with a clear mission, timebox, concrete probes and a way to recognize a problem, grounded in the stated behavior and bug history (nothing invented), plus a simple way to take session notes.", ["m-feature.md"]),
+ "m02_regression_checklist": ("Turn this release's change list into a regression checklist one tester can execute in the time box: every change covered or explicitly skipped with a reason, a smoke pass of the critical paths, concrete expected results and priorities, no invented changes.", ["m-release-changes.md"]),
+ "m03_run_summary": ("Write the test summary report for this cycle that a release manager can act on: correct counts and rates computed from the module data (any wrong stated figure called out), open defects by severity, risks, and a justified go/no-go. No invented numbers or IDs.", ["m-run-results.md"]),
+ "m04_ac_review": ("Review this story's acceptance criteria before testing starts: find ambiguity, contradictions, untestable wording and missing cases (errors, boundaries, roles, channels), ask the product owner the right questions, and propose testable rewrites. Don't invent product decisions.", ["m-story-acs.md"]),
 }
 
 def judge_input(task, root):

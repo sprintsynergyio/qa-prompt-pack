@@ -1,0 +1,5 @@
+Test summary report from these results. Recompute every total and rate from the module rows (executed = passed + failed; pass rate = passed / executed) and flag any stated figure that doesn't match. Never invent numbers or IDs.
+Output only: Summary (3 lines) · Metrics table (planned, executed, passed, failed, blocked, not run, pass rate) · Open defects by severity (IDs) · Risks · Recommendation Go/No-Go + 1-line reason.
+<results>
+{{m-run-results.md}}
+</results>

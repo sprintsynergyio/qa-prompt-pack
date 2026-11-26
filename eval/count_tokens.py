@@ -1,6 +1,6 @@
 """Count prompt tokens (tiktoken o200k_base = GPT-4o/4.1/5 family; cl100k_base = GPT-4/3.5).
 instr_* = instruction tokens only (shared input removed); input_* = full rendered prompt actually sent.
-Usage: python count_tokens.py [--suite general|industry|all]
+Usage: python count_tokens.py [--suite general|manual|industry|all]
 """
 import argparse, csv, pathlib, tiktoken
 from build_prompts import render, instructions_only, ROOT
@@ -65,12 +65,21 @@ def industry_rows():
         rows.append(pair_row(z.stem, orig.read_text() if orig.exists() else None, z.read_text()))
     return rows
 
+def manual_rows():
+    rows=[]
+    for z in sorted((ROOT/"prompts"/"manual"/"optimized").glob("*.txt")):
+        orig = ROOT/"prompts"/"manual"/"original"/z.name
+        rows.append(pair_row(z.stem, orig.read_text() if orig.exists() else None, z.read_text()))
+    return rows
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--suite", choices=["general","industry","all"], default="all")
+    ap.add_argument("--suite", choices=["general","manual","industry","all"], default="all")
     a = ap.parse_args()
     if a.suite in ("general","all"):
         write_csv(ROOT/"results"/"token_counts.csv", general_rows())
+    if a.suite in ("manual","all"):
+        write_csv(ROOT/"results"/"manual_token_counts.csv", manual_rows())
     if a.suite in ("industry","all"):
         write_csv(ROOT/"results"/"industry_token_counts.csv", industry_rows())
 

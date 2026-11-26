@@ -1,0 +1,16 @@
+You are helping a QA engineer plan regression testing.
+Use only the release notes and context below.
+If a risk is uncertain, label it as "needs product confirmation" instead of inventing behavior.
+
+Release notes:
+{{m-release-changes.md}}
+
+Using the reviewed impacted-area table, create regression test ideas.
+Group them as smoke, focused regression, negative checks, cross-browser or device checks, and automation candidates.
+For each idea, include:
+- Scenario
+- Why this matters
+- Preconditions
+- Expected result
+- Evidence to capture
+- Priority: P0, P1, or P2

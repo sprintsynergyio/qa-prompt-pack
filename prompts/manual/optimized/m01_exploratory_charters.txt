@@ -1,0 +1,5 @@
+Exploratory charters for this feature, 3-5, ranked by risk from the spec, sized to the time available. Each: "Explore <area> with <data/tactic> to discover <risk>", timebox (min), 3-5 probes, oracle (how you'll know it's wrong). Only behavior in the spec; unknowns go to Questions.
+Output only: charters, Questions (max 4), then a session-notes template (tried / saw / bugs / questions).
+<feature>
+{{m-feature.md}}
+</feature>
