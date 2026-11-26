@@ -1,0 +1,5 @@
+Expand the role × action matrix into tests. Every cell: allowed → 200/204 and the change persists; denied → 403 and no change. Don't add roles, actions, or permissions not in the matrix. No cross-tenant cases here.
+Output only: JSON array of {id,role,action,expected_http,expect_change} (one object per cell).
+<matrix>
+{{sa-rbac-matrix.md}}
+</matrix>

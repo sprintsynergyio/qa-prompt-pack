@@ -1,0 +1,5 @@
+Multi-tenant isolation tests. Cross-tenant read/update/delete/list/search/export of a foreign id must be 404 (not 403, so existence is not confirmed). Tenant id comes only from the session, not a spoofable header/body/path. Cover cache, async jobs, and three tenants (A,B,C). Don't invent shared objects not in the spec.
+Output only: table ID|Surface|Setup|Action|Expected (status + scope), max 20 rows.
+<tenancy>
+{{sa-tenant-isolation.md}}
+</tenancy>

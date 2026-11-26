@@ -1,0 +1,5 @@
+WCAG 2.2 AA test cases for this patient-portal screen only. Cover: name/role/value, labels, keyboard (no trap), focus order/visibility, error announcement, status messages, contrast, headings/skip, target size. Don't invent controls that are not in the screen. Undefined expectation → Questions (max 5).
+Output only: table ID|Control|WCAG|Type P/N/B|Steps|Expected, then Questions. Max 20 rows.
+<screen>
+{{hc-a11y-screen.md}}
+</screen>

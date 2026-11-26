@@ -1,0 +1,5 @@
+Test cases for the published limit and review rules only. Inclusive limits: at-limit succeeds, limit+1 minor unit is refused. Daily cap is account-wide across channels. Don't invent scoring weights, secret thresholds, or bypasses. Expected must name the documented outcome (allow / refuse / hold_for_review) and the audit result.
+Output only: table ID|Rule|Setup|Action|Expected, max 16 rows.
+<rules>
+{{fi-fraud-limits.md}}
+</rules>

@@ -1,0 +1,5 @@
+Compute proration with the documented method: unused credit and new-plan charge are each rounded half-up to the currency, then due = new_charge − credit. Include upgrade, downgrade, cancel, exact-boundary day, and a replayed billing webhook (account changes once). Don't invent fees or tax.
+Output only: JSON array of {id,credit,new_charge,due,access,webhook_effect}.
+<billing>
+{{sa-billing-proration.md}}
+</billing>

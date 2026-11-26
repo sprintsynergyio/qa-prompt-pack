@@ -1,0 +1,5 @@
+Synthetic healthcare test fixtures only. Never use real or production-derived people or identifiers. Rules: MRN SYN-######; SSN only reserved areas 000/666/9xx (never 078-05-1120 or a valid area); phone 555-01xx; email @example.com; street in a fictional city; DOB in 1990-01-01..2020-12-31; age 89+ only as an Age89Plus case labelled "90 or older". Each record: provenance {synthetic:true, seed, generator}. 8 valid (cover name, MRN, reserved SSN, phone, email, address, DOB, account no.) and 8 invalid (exactly one rule broken each). Don't invent clinical history.
+Output only: JSON array of {case,valid,payload,provenance}.
+<schema>
+{{hc-phi-schema.md}}
+</schema>

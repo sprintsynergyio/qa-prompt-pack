@@ -1,0 +1,5 @@
+Audit-trail checks for the listed actions (success, failure, refusal). Each event must include the required fields and must not contain PAN, CVV, full account number, secret, or raw token (mask per spec). Immutability and correlation_id are in scope. Don't invent extra event types.
+Output only: table ID|Action|Outcome|Fields asserted|Forbidden fields|Expected.
+<spec>
+{{fi-audit-trail.md}}
+</spec>
