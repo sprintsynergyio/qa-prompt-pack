@@ -1,46 +1,19 @@
 #!/usr/bin/env python3
-"""A/B evaluation of original vs optimized QA prompts on GitHub Models (free tier).
-Usage: .venv/bin/python run_eval.py [--suite general|industry] [--runs 3] [--model openai/gpt-4o-mini] [--judge openai/gpt-4.1] [--tasks 01,02 or hc01,fi02] [--variants original,optimized] [--score-only] [--no-judge]
-Token is read from GITHUB_TOKEN and never printed. Industry suite is optimized-only (absolute judge, 1 call per prompt) so a full run fits one free-tier day. Outputs: runs/outputs/* or runs/industry/*, results/results_quality.csv or results/industry_quality.csv"""
+"""A/B evaluation of original vs optimized QA prompts (general suite) and absolute scoring of industry prompts.
+Providers (eval/providers.py): Anthropic Messages API for claude-* models (ANTHROPIC_API_KEY), or any OpenAI-compatible
+endpoint (MODELS_URL + MODELS_API_KEY). GitHub Models was retired on 30 Jul 2026. Keys come from env only and are never printed.
+Spend is tracked from API usage (SPEND_FILE, default runs/spend.json) and capped by BUDGET_USD (default 3).
+Usage: python eval/run_eval.py [--suite general|industry] [--runs 3] [--model claude-haiku-5-5] [--judge claude-sonnet-5-5] [--tasks 01,02 or hc01,fi02] [--variants original,optimized] [--score-only] [--no-judge]
+Outputs: runs/outputs/* or runs/industry/*, results/results_quality.csv or results/industry_quality.csv"""
 import argparse, csv, json, os, pathlib, random, re, subprocess, sys, time, urllib.request, urllib.error
 import tiktoken
 from build_prompts import render, ROOT
+from providers import call, spend
 from industry_score import is_industry, score_industry
+from judge_tasks import judge_input, NEUTRAL
 ENC = tiktoken.get_encoding("o200k_base")
 OUT = ROOT/"runs"/"outputs"; OUT.mkdir(parents=True, exist_ok=True)
 HARNESS = ROOT/"eval"/"harness"; GEN = HARNESS/"gen"; GEN.mkdir(exist_ok=True)
-URL = os.environ.get("MODELS_URL", "https://models.github.ai/inference/chat/completions")
-LOG = ROOT/"runs"/"ratelimit.log"
-_last = [0.0]
-
-def call(model, prompt, max_tokens=3000, min_gap=6.0, temperature=0.2):
-    """POST with pacing (min_gap s between calls) and backoff on 429/5xx. Never logs the token."""
-    body = json.dumps({"model": model, "temperature": temperature, "max_tokens": max_tokens,
-                       "messages": [{"role": "user", "content": prompt}]}).encode()
-    hdr = {"Authorization": "Bearer " + os.environ["GITHUB_TOKEN"], "Content-Type": "application/json", "Accept": "application/json"}
-    for attempt in range(8):
-        wait = _last[0] + min_gap - time.time()
-        if wait > 0: time.sleep(wait)
-        _last[0] = time.time()
-        try:
-            t = time.time(); resp = urllib.request.urlopen(urllib.request.Request(URL, body, hdr), timeout=240); raw = resp.read()
-            if "json" not in (resp.headers.get("Content-Type") or ""):
-                raise RuntimeError(f"endpoint returned non-JSON ({resp.headers.get('Content-Type')}: {raw[:40]!r}); network/proxy is not reaching GitHub Models")
-            d = json.loads(raw)
-            u = d.get("usage", {})
-            return d["choices"][0]["message"]["content"] or "", u.get("prompt_tokens"), u.get("completion_tokens"), round(time.time()-t, 1)
-        except urllib.error.HTTPError as e:
-            ra = e.headers.get("retry-after"); msg = e.read()[:200].decode(errors="ignore")
-            with open(LOG, "a") as f: f.write(f"{time.strftime('%H:%M:%S')} {model} HTTP {e.code} retry-after={ra} {msg}\n")
-            if e.code in (429, 500, 502, 503, 504):
-                s = min(float(ra) if ra and ra.isdigit() else 15 * 2**attempt, 900)
-                if s > 900 or (ra and ra.isdigit() and int(ra) > 3600): raise RuntimeError(f"daily limit hit (retry-after {ra}s)")
-                print(f"  backoff {s:.0f}s (HTTP {e.code})", flush=True); time.sleep(s); continue
-            raise
-        except (urllib.error.URLError, TimeoutError) as e:
-            with open(LOG, "a") as f: f.write(f"{time.strftime('%H:%M:%S')} {model} network {e}\n")
-            time.sleep(15 * 2**attempt)
-    raise RuntimeError("gave up after retries")
 
 # ---------- deterministic scorers (each returns quality 0..1 plus details) ----------
 def code_block(text, langs=("ts", "typescript")):
@@ -123,7 +96,9 @@ def score(task, text, tag):
         items = [(a["payload"], a.get("valid")) if isinstance(a, dict) and "payload" in a else (a, None) for a in arr]
         s["items"] = len(items); s["actually_valid"] = sum(valid(p) for p, _ in items)
         lab = [(valid(p) == v) for p, v in items if v is not None]; s["label_accuracy"] = round(sum(lab)/len(lab), 2) if lab else ""
-        q = 0.4*s["json_ok"] + 0.6*max(0, 1 - abs(s["actually_valid"]-10)/10) * (1 if s["items"] >= 18 else s["items"]/20)
+        tl = [len(p["title"]) for p, _ in items if isinstance(p, dict) and isinstance(p.get("title"), str)]
+        s["max_len_boundary"] = int(200 in tl and 201 in tl)  # LLMs often miscount "200-char" strings
+        q = 0.3*s["json_ok"] + 0.5*max(0, 1 - abs(s["actually_valid"]-10)/10) * (1 if s["items"] >= 18 else s["items"]/20) + 0.2*s["max_len_boundary"]
     elif task == "09_test_plan":
         c, miss = cover(text, REQ); s["coverage"] = round(c, 2); s["missing"] = miss
         s["exit_criteria"] = int(bool(re.search(r"exit criteria", text, re.I)))
@@ -209,13 +184,24 @@ def suite_paths(suite):
     out = ROOT/"runs"/"outputs"; out.mkdir(parents=True, exist_ok=True)
     return out, ROOT/"runs"/"judge.json", ROOT/"results"/"results_quality.csv"
 
+def parse_judge(txt, need):
+    """First JSON object in the reply containing the needed keys (tolerates fences, prose, braces in reasons)."""
+    dec = json.JSONDecoder()
+    for m in re.finditer(r"\{", txt):
+        try: obj, _ = dec.raw_decode(txt[m.start():])
+        except ValueError: continue
+        if isinstance(obj, dict) and all(k in obj for k in need): return obj
+    (ROOT/"runs").mkdir(exist_ok=True); (ROOT/"runs"/"judge_parse_errors.log").open("a").write(txt[:2000] + "\n----\n")
+    return None
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--runs", type=int, default=3); ap.add_argument("--model", default="openai/gpt-4o-mini"); ap.add_argument("--judge", default="openai/gpt-4.1")
+    ap.add_argument("--runs", type=int, default=3); ap.add_argument("--model", default=os.environ.get("EVAL_MODEL", "claude-haiku-5-5")); ap.add_argument("--judge", default=os.environ.get("EVAL_JUDGE", "claude-sonnet-5-5"))
     ap.add_argument("--suite", choices=["general", "industry"], default="general")
     ap.add_argument("--tasks"); ap.add_argument("--variants", default=""); ap.add_argument("--score-only", action="store_true"); ap.add_argument("--no-judge", action="store_true")
+    ap.add_argument("--judge-spec", choices=["neutral", "original"], default="neutral", help="general pairwise judge input. neutral: neutral task + inputs (default); original: the original prompt")
     a = ap.parse_args()
-    if not a.score_only and not os.environ.get("GITHUB_TOKEN"): sys.exit("GITHUB_TOKEN not set")
+    if not a.score_only and not any(os.environ.get(k) for k in ("ANTHROPIC_API_KEY", "MODELS_API_KEY", "GITHUB_TOKEN")): sys.exit("set ANTHROPIC_API_KEY (claude-* models) or MODELS_URL + MODELS_API_KEY")
     tasks = select_tasks(list_tasks(a.suite), a.tasks)
     if a.variants:
         variants = a.variants.split(",")
@@ -225,6 +211,7 @@ def main():
     else:
         variants = ["original", "optimized"]
     out_dir, jpath, csv_path = suite_paths(a.suite)
+    if a.suite == "general" and a.judge_spec == "original": jpath = jpath.with_name("judge_original_spec.json")
     errors = []
     if not a.score_only:
         for t in tasks:
@@ -234,7 +221,7 @@ def main():
             for v in vs:
                 prompt = render(prompt_file(t, v, a.suite).read_text())
                 for i in range(1, a.runs+1):
-                    try: text, pin, pout, dt = call(a.model, prompt)
+                    try: text, pin, pout, dt = call(a.model, prompt, max_tokens=8000)
                     except Exception as e:
                         print(f"GENERATION FAILED {t} {v} run{i}: {e}", flush=True); errors.append(f"{t}.{v}.{i}: {e}"); continue
                     (out_dir/f"{t}.{v}.{i}.md").write_text(text)
@@ -245,9 +232,11 @@ def main():
         for t in tasks:
             orig_p = prompt_file(t, "original", a.suite)
             src = orig_p if orig_p.exists() else prompt_file(t, "optimized", a.suite)
-            inp = render(src.read_text())
-            if t[:2] in ("02", "04", "12"):  # give the judge the real page so it can check selectors
-                inp += "\n\n[Judge reference: real page aria snapshot]\n" + (ROOT/"inputs"/"locators.md").read_text()
+            if a.suite == "general" and a.judge_spec == "neutral" and t in NEUTRAL: inp = judge_input(t, ROOT)
+            else:
+                inp = render(src.read_text())
+                if a.suite == "general" and t[:2] in ("02", "04", "12"):  # give the judge the real page so it can check selectors
+                    inp += "\n\n[Judge reference: real page aria snapshot]\n" + (ROOT/"inputs"/"locators.md").read_text()
             has_pair = all((out_dir/f"{t}.original.{i}.md").exists() and (out_dir/f"{t}.optimized.{i}.md").exists() for i in range(1, a.runs+1))
             if has_pair:
                 for i in range(1, a.runs+1):
@@ -256,11 +245,10 @@ def main():
                     if key in judge and judge[key].get("stamp") == stamp: continue
                     flip = random.Random(key+stamp).random() < 0.5
                     A, B = (fz, fo) if flip else (fo, fz)
-                    try: txt, *_ = call(a.judge, JUDGE_PROMPT.format(inp=inp, a=A.read_text()[:12000], b=B.read_text()[:12000]), max_tokens=200, min_gap=8.0, temperature=0)
+                    try: txt, *_ = call(a.judge, JUDGE_PROMPT.format(inp=inp, a=A.read_text()[:40000], b=B.read_text()[:40000]), max_tokens=1500, min_gap=2.0, temperature=0)
                     except Exception as e:
                         print(f"JUDGE FAILED {key}: {e}", flush=True); errors.append(f"judge {key}: {e}"); continue
-                    try: j = json.loads(re.search(r"\{.*\}", txt, re.S).group(0))
-                    except Exception: j = {"A": None, "B": None, "winner": "parse_error"}
+                    j = parse_judge(txt, ("A", "B")) or {"A": None, "B": None, "winner": "parse_error"}
                     opt_s, org_s = (j.get("A"), j.get("B")) if flip else (j.get("B"), j.get("A"))
                     w = j.get("winner"); win = {"A": "optimized" if flip else "original", "B": "original" if flip else "optimized"}.get(w, w)
                     judge[key] = {"stamp": stamp, "optimized": opt_s, "original": org_s, "winner": win, "reason": j.get("reason")}
@@ -274,12 +262,11 @@ def main():
                 key = t
                 stamp = "-".join(f"{f.stat().st_mtime:.0f}" for f in runs)
                 if key in judge and judge[key].get("stamp") == stamp: continue
-                answers = "\n\n".join(f"<run n=\"{i+1}\">\n{f.read_text()[:4000]}\n</run>" for i, f in enumerate(runs))
-                try: txt, *_ = call(a.judge, ABSOLUTE_JUDGE_PROMPT.format(inp=inp[:8000], answers=answers[:14000]), max_tokens=200, min_gap=8.0, temperature=0)
+                answers = "\n\n".join(f"<run n=\"{i+1}\">\n{f.read_text()[:20000]}\n</run>" for i, f in enumerate(runs))
+                try: txt, *_ = call(a.judge, ABSOLUTE_JUDGE_PROMPT.format(inp=inp[:20000], answers=answers[:60000]), max_tokens=1500, min_gap=2.0, temperature=0)
                 except Exception as e:
                     print(f"JUDGE FAILED {key}: {e}", flush=True); errors.append(f"judge {key}: {e}"); continue
-                try: j = json.loads(re.search(r"\{.*\}", txt, re.S).group(0))
-                except Exception: j = {"score": None, "consistency": None, "reason": "parse_error"}
+                j = parse_judge(txt, ("score",)) or {"score": None, "consistency": None, "reason": "parse_error"}
                 judge[key] = {"stamp": stamp, "score": j.get("score"), "consistency": j.get("consistency"), "reason": j.get("reason"), "mode": "absolute"}
                 jpath.parent.mkdir(parents=True, exist_ok=True)
                 jpath.write_text(json.dumps(judge, indent=1)); print(f"judge {key}: score={j.get('score')} consistency={j.get('consistency')}", flush=True)
@@ -301,5 +288,8 @@ def main():
         w = csv.DictWriter(fh, fieldnames=keys); w.writeheader(); w.writerows(rows)
     err_path = ROOT/"results"/("industry_errors.txt" if a.suite == "industry" else "errors.txt")
     err_path.write_text("\n".join(errors))
-    print(f"wrote {csv_path} ({len(rows)} rows); {len(errors)} errors")
+    print(f"spend so far: ${spend()['usd']:.4f}"); print(f"wrote {csv_path} ({len(rows)} rows); {len(errors)} errors")
+    gen_fail = [e for e in errors if not e.startswith("judge")]
+    if not a.score_only and not rows:
+        sys.exit(f"FAILED: all {len(gen_fail)} generation calls failed; first error: {gen_fail[0] if gen_fail else 'n/a'}")
 if __name__ == "__main__": main()

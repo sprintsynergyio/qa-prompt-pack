@@ -1,0 +1,254 @@
+{
+ "01_test_cases.1": {
+  "stamp": "1795710223-1795710291",
+  "optimized": 8,
+  "original": 6,
+  "winner": "optimized",
+  "reason": "A covers every rule with precise, executable steps and sound questions; B pads with irrelevant cases and has vague or invented expectations."
+ },
+ "01_test_cases.2": {
+  "stamp": "1795710248-1795710308",
+  "optimized": 6,
+  "original": 7,
+  "winner": "original",
+  "reason": "B adds security cases and flags more ambiguities; A is tighter but has no security coverage."
+ },
+ "01_test_cases.3": {
+  "stamp": "1795710274-1795710324",
+  "optimized": 8,
+  "original": 5,
+  "winner": "optimized",
+  "reason": "A is precise, covers every rule, and flags real ambiguities; B pads with irrelevant cases and vague expectations."
+ },
+ "02_ui_script.1": {
+  "stamp": "1795710340-1795710383",
+  "optimized": 9,
+  "original": 6,
+  "winner": "optimized",
+  "reason": "A is concise, uses only given locators, and asserts every state change. B adds unrequested tests, an unlisted testid, and a risky whitespace-input value assertion."
+ },
+ "02_ui_script.2": {
+  "stamp": "1795710358-1795710390",
+  "optimized": 9,
+  "original": 6,
+  "winner": "optimized",
+  "reason": "B uses the provided testids and locators concisely; A wrongly says no testids exist and adds padding."
+ },
+ "02_ui_script.3": {
+  "stamp": "1795710376-1795710396",
+  "optimized": 9,
+  "original": 3,
+  "winner": "optimized",
+  "reason": "B uses the data-testids the input provides and likely passes; A denies they exist, and its listitem locators also match the filter links, so its list assertions would fail."
+ },
+ "03_api_tests.1": {
+  "stamp": "1795710415-1795710468",
+  "optimized": 4,
+  "original": 7,
+  "winner": "original",
+  "reason": "B asserts real faked-write behavior with marked known gaps; A mostly skipped fixme tests assuming 400."
+ },
+ "03_api_tests.2": {
+  "stamp": "1795710437-1795710479",
+  "optimized": 7,
+  "original": 6,
+  "winner": "optimized",
+  "reason": "B asserts the documented id 201 exactly and is concise; A omits it and pads."
+ },
+ "03_api_tests.3": {
+  "stamp": "1795710457-1795710488",
+  "optimized": 8,
+  "original": 6,
+  "winner": "optimized",
+  "reason": "A asserts documented id 201 concisely and marks gaps as fixme; B pads and asserts undocumented behavior."
+ },
+ "04_test_review.1": {
+  "stamp": "1795710877-1795710937",
+  "optimized": 7,
+  "original": 6,
+  "winner": "optimized",
+  "reason": "A is concise and catches the 'Clear completed' text= collision; B is padded and wrongly denies data-testid exists."
+ },
+ "04_test_review.2": {
+  "stamp": "1795710902-1795710953",
+  "optimized": 7,
+  "original": 5,
+  "winner": "optimized",
+  "reason": "B is concise and uses snapshot roles correctly; A pads, and its rewrite's listitem assertion would fail."
+ },
+ "04_test_review.3": {
+  "stamp": "1795710925-1795710967",
+  "optimized": 6,
+  "original": 5,
+  "winner": "optimized",
+  "reason": "Both fixed tests would fail; A is concise and uses snapshot names, but invents 'walk dog'; B is padded and its listitem locator also matches filter items."
+ },
+ "05_bug_report.1": {
+  "stamp": "1795710978-1795711003",
+  "optimized": 6,
+  "original": 7,
+  "winner": "original",
+  "reason": "A catches the 3-todos-minus-1 vs \"1 items left\" inconsistency and marks gaps; severity High is overstated. B is concise but misses it."
+ },
+ "05_bug_report.2": {
+  "stamp": "1795710986-1795711011",
+  "optimized": 8,
+  "original": 6,
+  "winner": "optimized",
+  "reason": "A spots the 3-added/1-cleared vs counter-of-1 inconsistency, stays faithful to uncertainty, asks targeted questions; B overclaims and misses it."
+ },
+ "05_bug_report.3": {
+  "stamp": "1795710997-1795711017",
+  "optimized": 7,
+  "original": 6,
+  "winner": "optimized",
+  "reason": "B stays faithful to notes, concise, flags uncertainty and gaps; A splits reports, overrates High severity, adds redundant padding and inferred steps."
+ },
+ "06_edge_cases.1": {
+  "stamp": "1795711052-1795713255",
+  "optimized": 8,
+  "original": 5,
+  "winner": "optimized",
+  "reason": "B is concise, spec-faithful, and flags unknowns with '?'; A pads heavily and invents expectations."
+ },
+ "06_edge_cases.2": {
+  "stamp": "1795711071-1795713268",
+  "optimized": 8,
+  "original": 5,
+  "winner": "optimized",
+  "reason": "B is concise, flags unknowns with '?', and follows the spec; A pads and asserts unspecified behaviors (e.g. Escape, newlines)."
+ },
+ "06_edge_cases.3": {
+  "stamp": "1795711094-1795713281",
+  "optimized": 8,
+  "original": 6,
+  "winner": "optimized",
+  "reason": "B is concise, flags unknowns with '?', and follows the spec; A is padded and invents expectations."
+ },
+ "07_test_data.1": {
+  "stamp": "1795711145-1795713299",
+  "optimized": 8,
+  "original": 8,
+  "winner": "tie",
+  "reason": "A covers the untrimmed-title rule; B covers the float userId and has descriptions; otherwise equivalent."
+ },
+ "07_test_data.2": {
+  "stamp": "1795711161-1795713311",
+  "optimized": 8,
+  "original": 6,
+  "winner": "optimized",
+  "reason": "B covers the completed field and treats untrimmed titles as invalid; A marks a padded title valid and never tests completed."
+ },
+ "07_test_data.3": {
+  "stamp": "1795711175-1795713324",
+  "optimized": 8,
+  "original": 6,
+  "winner": "optimized",
+  "reason": "A treats untrimmed title as invalid, matching the 'trimmed' rule; B marks a padded title valid, which is likely wrong."
+ },
+ "08_flaky.1": {
+  "stamp": "1795711239-1795711290",
+  "optimized": 8,
+  "original": 5,
+  "winner": "optimized",
+  "reason": "B diagnoses the missing todo precisely with a concise, usable fix; A is padded and speculates about a '70% pass rate'."
+ },
+ "08_flaky.2": {
+  "stamp": "1795711261-1795711299",
+  "optimized": 8,
+  "original": 5,
+  "winner": "optimized",
+  "reason": "A pinpoints the inter-test dependency from the log with a concise, usable fix; B pads with speculative causes and invented symptoms."
+ },
+ "08_flaky.3": {
+  "stamp": "1795711281-1795711307",
+  "optimized": 8,
+  "original": 5,
+  "winner": "optimized",
+  "reason": "A diagnoses the missing todo precisely from the log and gives a concise, working fix; B pads with speculation and invented '70% pass rate'."
+ },
+ "09_test_plan.1": {
+  "stamp": "1795711341-1795713337",
+  "optimized": 8,
+  "original": 5,
+  "winner": "optimized",
+  "reason": "A is complete and concise with ranked risks, schedule, exit criteria; B truncated, schedule missing, padded."
+ },
+ "09_test_plan.2": {
+  "stamp": "1795711371-1795713351",
+  "optimized": 8,
+  "original": 6,
+  "winner": "optimized",
+  "reason": "B has ranked risks, an automation/manual split, a schedule that fits one week, and measurable exit criteria; A is padded and lacks ranked risks."
+ },
+ "09_test_plan.3": {
+  "stamp": "1795711405-1795713365",
+  "optimized": 7,
+  "original": 6,
+  "winner": "optimized",
+  "reason": "A is concise, ranked, mapped to rules, with measurable criteria; B is padded and invents unspecified behaviors."
+ },
+ "10_load_script.1": {
+  "stamp": "1795711447-1795711471",
+  "optimized": 8,
+  "original": 6,
+  "winner": "optimized",
+  "reason": "A is concise and correct; B has wrong iteration estimate, invented Playwright reference, and padding."
+ },
+ "10_load_script.2": {
+  "stamp": "1795711457-1795711475",
+  "optimized": 8,
+  "original": 6,
+  "winner": "optimized",
+  "reason": "A is concise, correct and runs as-is; B adds a hallucinated Playwright remark and padding."
+ },
+ "10_load_script.3": {
+  "stamp": "1795711467-1795711479",
+  "optimized": 8,
+  "original": 6,
+  "winner": "optimized",
+  "reason": "A meets spec concisely; B adds unrequested thresholds, padding, and an invented Playwright reference."
+ },
+ "11_security.1": {
+  "stamp": "1795711511-1795713381",
+  "optimized": 8,
+  "original": 6,
+  "winner": "optimized",
+  "reason": "A is concise, app-specific with concrete inputs; B pads with inapplicable items (SQLi, SSRF, CORS, CI/CD) despite a good scope note."
+ },
+ "11_security.2": {
+  "stamp": "1795711544-1795713391",
+  "optimized": 8,
+  "original": 6,
+  "winner": "optimized",
+  "reason": "B is concise, concrete, with expected results; A is padded, speculative (SSRF, secrets, CORS), lacks expected-result column."
+ },
+ "11_security.3": {
+  "stamp": "1795711574-1795713406",
+  "optimized": 7,
+  "original": 7,
+  "winner": "tie",
+  "reason": "A has broader coverage but is padded with inapplicable items; B is concise, with expected results, but thinner."
+ },
+ "12_locator_fix.1": {
+  "stamp": "1795711610-1795711615",
+  "optimized": 8,
+  "original": 8,
+  "winner": "tie",
+  "reason": "Both uniquely match the first item's Toggle Todo checkbox; A is CSS with a useful diagnosis, B is idiomatic."
+ },
+ "12_locator_fix.2": {
+  "stamp": "1795711612-1795711616",
+  "optimized": 8,
+  "original": 8,
+  "winner": "tie",
+  "reason": "Both uniquely match the first item's Toggle Todo checkbox; A is idiomatic role-based, B is explicit CSS with correct diagnosis."
+ },
+ "12_locator_fix.3": {
+  "stamp": "1795711614-1795711618",
+  "optimized": 8,
+  "original": 8,
+  "winner": "tie",
+  "reason": "Both uniquely match the first item's Toggle Todo checkbox; each relies on position equally."
+ }
+}

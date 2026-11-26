@@ -1,5 +1,5 @@
 Find PHI/PII leaks in these artifacts (logs, UI, API). Report only issues that are present. A masked identifier (SYN-***441, last-4 only) is not a leak. Don't invent findings; list clean artifact IDs under Clean.
-Output only: JSON {findings:[{id,artifact,field,value_shape,risk,recommended_mask}], clean:["CLEAN-…"]}. Use the artifact IDs from the input.
+Output only: JSON {findings:[{id,artifact,field,value_shape,risk,recommended_mask}], clean:["CLEAN-…"]}. id = the input's artifact ID (e.g. LEAK-01); artifact = its type (log/UI/API).
 <artifacts>
 {{hc-phi-artifacts.md}}
 </artifacts>

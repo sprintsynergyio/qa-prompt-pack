@@ -1,20 +1,39 @@
 # Industry pack results (v0.2)
-Status 26 Nov 2026, 9:13 PM PKT
+Status 26 Nov 2026, 10:55 PM PKT
 
-## Output quality: NOT MEASURED ON MODELS YET
-Deterministic domain checks are in place and the self-test fixtures all pass (`python eval/industry_selftest.py`, 23 fixtures). The model run (3 generations per prompt + one absolute judge call per prompt) has not been completed, so there are no quality scores, judge verdicts or rewrite-after-loss notes yet. Nothing has been invented here.
+## Output quality (measured)
+Generation `claude-haiku-5-5`, 3 runs per prompt (48 outputs). Each run is scored by the deterministic domain checks below; a run passes at ≥ 0.8. Judge: `claude-sonnet-5-5`, one absolute rubric call per prompt that sees all 3 runs (1-10 for typical quality and for consistency). Judge reasons are in `industry_judge.json`.
 
-A full industry eval is 48 generation calls (`openai/gpt-4o-mini`, low tier: 15/min, 150/day) plus 16 absolute judge calls (`openai/gpt-4.1`, high tier: 10/min, 50/day). That fits one day's free quota if it is not run on the same day as the 12-prompt general pack.
+- **Pass rate: 48/48 runs (100%); 16/16 prompts pass on every run.** Mean check score 0.977, mean judge 7.5/10.
+- Weakest by judge: fi04 audit trail (6/10, consistency 5). Its checks pass, but runs differ in how many refusal/correction rows they write, and some invent rows. sa01 RBAC (consistency 5) is correct on all 55 cells, but runs format `expected_http` and read results differently.
+- Industry cost: $0.59 including all re-runs and re-judging.
 
-Run it with **Actions → prompt-eval-industry**, or:
+| Prompt | Quality (checks) | Runs passing (≥0.8) | Judge | Consistency | Tokens in | Tokens out | Gen cost (USD) | Verdict |
+|---|---|---|---|---|---|---|---|---|
+| ec01_cart_checkout | 0.969 | 3/3 | 7.0 | 7.0 | 448 | 3234 | 0.0050 | ok |
+| ec02_discounts_tax | 1.0 | 3/3 | 10.0 | 10.0 | 750 | 1520 | 0.0025 | strong |
+| ec03_inventory_race | 1.0 | 3/3 | 7.0 | 7.0 | 518 | 2548 | 0.0040 | ok |
+| ec04_peak_load | 1.0 | 3/3 | 7.0 | 8.0 | 332 | 2939 | 0.0045 | ok |
+| fi01_rounding_currency | 1.0 | 3/3 | 8.0 | 7.0 | 496 | 977 | 0.0016 | strong |
+| fi02_payment_refund | 0.879 | 3/3 | 7.0 | 7.0 | 646 | 6400 | 0.0098 | ok |
+| fi03_fraud_limits | 1.0 | 3/3 | 7.0 | 7.0 | 478 | 2359 | 0.0037 | ok |
+| fi04_audit_trail | 1.0 | 3/3 | 6.0 | 5.0 | 396 | 2758 | 0.0043 | ok |
+| hc01_phi_testdata | 1.0 | 3/3 | 8.0 | 9.0 | 690 | 5403 | 0.0083 | strong |
+| hc02_clinical_flows | 1.0 | 3/3 | 7.0 | 6.0 | 740 | 6589 | 0.0101 | ok |
+| hc03_phi_leakage | 1.0 | 3/3 | 9.0 | 10.0 | 595 | 1027 | 0.0017 | strong |
+| hc04_accessibility | 1.0 | 3/3 | 7.0 | 8.0 | 478 | 4392 | 0.0067 | ok |
+| sa01_rbac_matrix | 0.948 | 3/3 | 7.0 | 5.0 | 404 | 3837 | 0.0059 | ok |
+| sa02_tenant_isolation | 0.887 | 3/3 | 7.0 | 8.0 | 529 | 2368 | 0.0037 | ok |
+| sa03_billing_proration | 0.991 | 3/3 | 8.0 | 6.0 | 619 | 1163 | 0.0019 | strong |
+| sa04_api_contract | 0.965 | 3/3 | 8.0 | 8.0 | 454 | 2561 | 0.0040 | strong |
 
-```bash
-python eval/industry_selftest.py
-GITHUB_TOKEN=... K6_BIN=/path/to/k6 python eval/run_eval.py --suite industry --runs 3
-python eval/summarize.py --suite industry
-```
-
-The general `prompt-eval` workflow is unchanged and should not be started from this branch on the same day if the free-tier budget is already in use.
+### Fixes made
+| Prompt | Problem | Fix | Before → after |
+|---|---|---|---|
+| ec03_inventory_race | 0/3 runs passing (0.75). The outputs were right ("Exactly 1 response 200", "qty exceeds stock") but the check regex only accepted "exactly one" / "qty > stock" | Checker fix, no prompt change: accept "exactly 1" and "exceeds stock" / "qty=2 … stock=1" | 0.75, 0/3 → 1.0, 3/3 |
+| hc03_phi_leakage | 2/3 passing. Run 1 put the LEAK-xx IDs in `artifact` and its own F1..F4 in `id` | Prompt now says `id` = the input's artifact ID, `artifact` = its type | 0.87, 2/3 → 1.0, 3/3; judge 9 |
+| (all) | The first judge pass cut answers at 4-14k characters, so it reported "truncated" outputs | Judge caps raised to 20k per run / 60k total, and everything was re-judged | e.g. hc01 3 → 8, sa01 4 → 7, fi02 5 → 7 |
+| fi04_audit_trail (tried, reverted) | Judge 6/10 | Tried "every action × outcome, rows self-contained" | Output tokens +60%, judge 6 → 6, consistency 5. Reverted to the shorter prompt |
 
 ## Domain checks (deterministic, no model)
 Hand-written reference answers score 1.0 (or ≥0.8) and planted-bad answers score below 0.5 on:

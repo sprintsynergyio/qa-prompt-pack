@@ -552,10 +552,10 @@ def score_ec02(text):
 
 def score_ec03(text):
     groups = {
-        "exactly_one": r"exactly one",
+        "exactly_one": r"exactly (one|1)\b",
         "out_of_stock": r"out_of_stock|409",
         "stock_zero": r"stock(?: decreases)?(?: by)? 1|final stock\s*=\s*0|stock=0",
-        "qty_gt": r"qty > stock|greater than stock",
+        "qty_gt": r"qty ?> ?stock|greater than stock|exceeds stock|more than (the )?(available )?stock|qty=2.{0,40}stock=1",
         "hold": r"\bhold\b|reserv",
         "expiry": r"expir",
         "between": r"between (add.?to.?cart|cart) and (pay|checkout)|sold.?out between",

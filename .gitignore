@@ -4,3 +4,5 @@ eval/harness/test-results/
 runs/
 .venv/
 __pycache__/
+prompts/rendered/
+node_modules

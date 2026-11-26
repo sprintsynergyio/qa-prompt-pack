@@ -22,8 +22,8 @@ Built by [SprintSynergy](https://sprintsynergy.com), an AI-based QA automation c
 
 - `prompts/original/`: the popular version, quoted with credit (see [SOURCES.md](SOURCES.md))
 - `prompts/optimized/`: our version, copy-paste ready. Replace the `{{file}}` slot with your own input.
-- `inputs/`: the shared general input ([TodoMVC demo](https://demo.playwright.dev/todomvc/) and [JSONPlaceholder](https://jsonplaceholder.typicode.com)) plus synthetic industry fixtures (`hc-*.md`, `fi-*.md`, `ec-*.md`, `sa-*.md`)
-- `eval/`: the A/B harness (GitHub Models, blind judge, deterministic checks)
+- `inputs/`: the shared general input ([TodoMVC demo](https://demo.playwright.dev/todomvc/) real DOM and Playwright aria snapshot, and the [JSONPlaceholder](https://jsonplaceholder.typicode.com) API) plus synthetic industry fixtures (`hc-*.md`, `fi-*.md`, `ec-*.md`, `sa-*.md`)
+- `eval/`: the A/B harness (Claude or any OpenAI-compatible model endpoint, blind judge, deterministic checks)
 - `results/`: token counts and quality results (general and industry)
 - `research/`: source × task matrix, plus industry research notes
 - `prompts/industry/`: v0.2 domain packs (healthcare, financial, e-commerce, SaaS)
@@ -47,16 +47,19 @@ Each prompt pair runs 3 times on the same input. Scoring:
 
 Token counts use `tiktoken` (o200k_base) plus the API's own usage numbers.
 
-Run it yourself: trigger **Actions → prompt-eval** (uses the free GitHub Models tier through `GITHUB_TOKEN`), or locally:
+Run it yourself. Locally with Claude (default models `claude-haiku-5-5` for generation, `claude-sonnet-5-5` as judge):
 ```bash
 pip install -r eval/requirements.txt
 (cd eval/harness && npm install && npx playwright install chromium)
 python eval/count_tokens.py
-GITHUB_TOKEN=... K6_BIN=/path/to/k6 python eval/run_eval.py --runs 3
+export ANTHROPIC_API_KEY=...            # never commit it
+BUDGET_USD=3 K6_BIN=/path/to/k6 python eval/run_eval.py --runs 3   # stops before exceeding BUDGET_USD (spend in runs/spend.json or SPEND_FILE)
+python eval/summarize.py
 ```
+Options: `EVAL_MODEL` / `EVAL_JUDGE` (or `--model` / `--judge`), `--tasks 07,09`, `--score-only` (re-score and judge only new outputs), and `--judge-spec original` (judge against the original prompt text instead of the neutral task in `eval/judge_tasks.py`). Any other model id goes to an OpenAI-compatible endpoint: `MODELS_URL` + `MODELS_API_KEY`. On GitHub, add the repo secret `ANTHROPIC_API_KEY` (or `MODELS_API_KEY`) and trigger **Actions → prompt-eval**. Without a secret, the workflow runs only the self-test.
 
 ## Results
-See [results/results.md](results/results.md). Where it breaks is listed there too: prompts where the short version doesn't win, and why.
+See [results/results.md](results/results.md). Headline: blind judge prefers the optimized prompt in 28 of 36 pairs (3 for the original); deterministic checks 0.877 → 0.951; output tokens −43%. Where it breaks and what we fixed is listed there too.
 
 ## Industry packs (v0.2)
 
@@ -86,15 +89,16 @@ These prompts follow the same rules as the general pack: short instructions, tag
 - `prompts/industry/`: copy-paste ready. Replace the `{{file}}` slot with your own input.
 - `inputs/hc-*.md`, `inputs/fi-*.md`, `inputs/ec-*.md`, `inputs/sa-*.md`: synthetic fixtures only (no real patient, cardholder or customer data; card numbers are documented test PANs such as 4242424242424242).
 - Domain checks live in `eval/industry_score.py` (reserved SSNs only, test-card allowlist, exact rounding and proration, 404 not 403 for cross-tenant ids, valid JSON). Run `python eval/industry_selftest.py` with no API key.
-- The industry suite is run separately from the general pack so each one fits a day's free GitHub Models quota (16 prompts × 3 runs = 48 generation calls, plus 16 absolute judge calls):
+- The industry suite runs separately from the general pack: 16 prompts × 3 runs = 48 generation calls, plus 16 absolute judge calls (one per prompt, all 3 runs together). Results are in [results/industry_summary.md](results/industry_summary.md).
 
 ```bash
 python eval/count_tokens.py --suite industry
 python eval/industry_selftest.py
-GITHUB_TOKEN=... K6_BIN=/path/to/k6 python eval/run_eval.py --suite industry --runs 3
+export ANTHROPIC_API_KEY=...
+BUDGET_USD=1 K6_BIN=/path/to/k6 python eval/run_eval.py --suite industry --runs 3
+python eval/summarize.py --suite industry
 ```
 
-Or trigger **Actions → prompt-eval-industry**. Do not run it on the same day as a full general eval if you are on the free tier.
 
 See [results/industry.md](results/industry.md) for token counts and eval status.
 
