@@ -1,0 +1,114 @@
+{
+ "ec01_cart_checkout": {
+  "stamp": "1795710312-1795710327-1795710341",
+  "score": 7,
+  "consistency": 7,
+  "reason": "All cover required scenarios and invariants; Run 1 is most precise (4330 total); Run 2 is vaguer and adds an unspecified stock case.",
+  "mode": "absolute"
+ },
+ "ec02_discounts_tax": {
+  "stamp": "1795710347-1795710353-1795710358",
+  "score": 10,
+  "consistency": 10,
+  "reason": "All seven cases check out arithmetically, including half-up rounding in stack_ok; all three runs are identical and correctly formatted.",
+  "mode": "absolute"
+ },
+ "ec03_inventory_race": {
+  "stamp": "1795710370-1795710381-1795710392",
+  "score": 7,
+  "consistency": 7,
+  "reason": "All cover required scenarios with mostly exact counts; run 2 adds invented, vague rows (hold race, coupon/checkout) and undefined N/M.",
+  "mode": "absolute"
+ },
+ "ec04_peak_load": {
+  "stamp": "1795710405-1795710417-1795710427",
+  "score": 7,
+  "consistency": 8,
+  "reason": "Stages, thresholds, sleep and 409 handling are correct in all; runs 1 and 3 invent a JSON field for 409.",
+  "mode": "absolute"
+ },
+ "fi01_rounding_currency": {
+  "stamp": "1795710431-1795710435-1795710439",
+  "score": 8,
+  "consistency": 7,
+  "reason": "All ten expected values are correct; only the split case's mode field varies (n/a, invented remainder_to_last, null).",
+  "mode": "absolute"
+ },
+ "fi02_payment_refund": {
+  "stamp": "1795710466-1795710503-1795710899",
+  "score": 7,
+  "consistency": 7,
+  "reason": "Broad, accurate coverage with in-spec questions; flaws: invented 200/201 codes, speculative TMO-03, messy REF-06 setup text.",
+  "mode": "absolute"
+ },
+ "fi03_fraud_limits": {
+  "stamp": "1795710907-1795710917-1795710929",
+  "score": 7,
+  "consistency": 7,
+  "reason": "All three cover the published boundaries accurately with no invented facts; run 2 leaves payee state ambiguous and has thinner coverage, run 3 adds redundant rows.",
+  "mode": "absolute"
+ },
+ "fi04_audit_trail": {
+  "stamp": "1795713923-1795713923-1795713923",
+  "score": 6,
+  "consistency": 5,
+  "reason": "Runs 1\u20132 cover immutability, correction, correlation and PAN masking; Run 3 omits several and invents outcome values.",
+  "mode": "absolute"
+ },
+ "hc01_phi_testdata": {
+  "stamp": "1795710985-1795711002-1795711021",
+  "score": 8,
+  "consistency": 9,
+  "reason": "All three runs follow the rules, with exactly one break per invalid case; run 3 covers more SSN areas; none has an Age89Plus case.",
+  "mode": "absolute"
+ },
+ "hc02_clinical_flows": {
+  "stamp": "1795711049-1795711079-1795711103",
+  "score": 7,
+  "consistency": 6,
+  "reason": "Runs 1 and 2 are thorough and flag gaps as Questions; run 3 omits no-show negatives and hours, and invents reschedule 409 and override fields.",
+  "mode": "absolute"
+ },
+ "hc03_phi_leakage": {
+  "stamp": "1795711634-1795711638-1795711643",
+  "score": 9,
+  "consistency": 10,
+  "reason": "All four leaks found, three clean IDs listed, valid JSON; runs nearly identical, only minor wording differences.",
+  "mode": "absolute"
+ },
+ "hc04_accessibility": {
+  "stamp": "1795711135-1795711155-1795711174",
+  "score": 7,
+  "consistency": 8,
+  "reason": "All three follow format, cover most areas; minor invented details, some unspecified expectations asserted (invalid date, 201st char); run 3 tightest.",
+  "mode": "absolute"
+ },
+ "sa01_rbac_matrix": {
+  "stamp": "1795711185-1795711199-1795711212",
+  "score": 7,
+  "consistency": 5,
+  "reason": "All three cover the 55 cells correctly; they differ in expected_http type, false vs null for reads, and id format.",
+  "mode": "absolute"
+ },
+ "sa02_tenant_isolation": {
+  "stamp": "1795711226-1795711237-1795711244",
+  "score": 7,
+  "consistency": 8,
+  "reason": "Solid, spec-faithful coverage of all three tenants, cache and jobs; minor invented endpoints, narrowed 400s, and gaps in export/job update/delete.",
+  "mode": "absolute"
+ },
+ "sa03_billing_proration": {
+  "stamp": "1795711248-1795711253-1795711258",
+  "score": 8,
+  "consistency": 6,
+  "reason": "All amounts and access values are correct; runs 1 and 3 match, run 2 adds an extra duplicate row.",
+  "mode": "absolute"
+ },
+ "sa04_api_contract": {
+  "stamp": "1795711268-1795711277-1795711289",
+  "score": 8,
+  "consistency": 8,
+  "reason": "All three cover documented cases and flag undocumented ones; Run 2 has a malformed '{\"name\"}' and a weak T16; Run 1 is the most thorough.",
+  "mode": "absolute"
+ }
+}

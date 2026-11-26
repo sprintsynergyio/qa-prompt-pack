@@ -1,0 +1,5 @@
+Cart and checkout edge cases for this shop. Must include: guest checkout, empty cart, stale price, address/tax change, payment decline+retry, gateway timeout, double-submit. Assert the two invariants: never charge without a matching order; never create an order without a successful authorization. Don't invent payment methods or regions.
+Output only: table ID|Scenario|Steps|Expected (order state + payment state), max 16 rows.
+<shop>
+{{ec-cart-checkout.md}}
+</shop>

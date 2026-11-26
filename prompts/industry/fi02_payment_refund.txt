@@ -1,0 +1,5 @@
+Test cases for the payment and refund state machine. Must cover: auth, capture (full/partial/over), void vs refund, full/partial/multiple refunds, over-refund, duplicate request, timeout, idempotency key, webhook replay. Amounts in minor units. Don't invent statuses or fees not in the spec. Unclear → Questions (max 4).
+Output only: table ID|Transition|Setup|Action|Expected state+amounts, then Questions.
+<spec>
+{{fi-payment-refund.md}}
+</spec>

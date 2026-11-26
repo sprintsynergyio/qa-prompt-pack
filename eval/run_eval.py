@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-"""A/B evaluation of original vs optimized QA prompts.
+"""A/B evaluation of original vs optimized QA prompts (general suite) and absolute scoring of industry prompts.
 Providers (eval/providers.py): Anthropic Messages API for claude-* models (ANTHROPIC_API_KEY), or any OpenAI-compatible
 endpoint (MODELS_URL + MODELS_API_KEY). GitHub Models was retired on 30 Jul 2026. Keys come from env only and are never printed.
-Spend is tracked from API usage in runs/spend.json and capped by BUDGET_USD (default 3).
-Usage: python eval/run_eval.py [--runs 3] [--model claude-haiku-5-5] [--judge claude-sonnet-5-5] [--tasks 01,02] [--variants original,optimized] [--score-only] [--no-judge]
-Outputs: runs/outputs/*, runs/judge.json, results/results_quality.csv"""
+Spend is tracked from API usage (SPEND_FILE, default runs/spend.json) and capped by BUDGET_USD (default 3).
+Usage: python eval/run_eval.py [--suite general|industry] [--runs 3] [--model claude-haiku-5-5] [--judge claude-sonnet-5-5] [--tasks 01,02 or hc01,fi02] [--variants original,optimized] [--score-only] [--no-judge]
+Outputs: runs/outputs/* or runs/industry/*, results/results_quality.csv or results/industry_quality.csv"""
 import argparse, csv, json, os, pathlib, random, re, subprocess, sys, time, urllib.request, urllib.error
 import tiktoken
 from build_prompts import render, ROOT
 from providers import call, spend
-from judge_tasks import judge_input
+from industry_score import is_industry, score_industry
+from judge_tasks import judge_input, NEUTRAL
 ENC = tiktoken.get_encoding("o200k_base")
 OUT = ROOT/"runs"/"outputs"; OUT.mkdir(parents=True, exist_ok=True)
 HARNESS = ROOT/"eval"/"harness"; GEN = HARNESS/"gen"; GEN.mkdir(exist_ok=True)
@@ -57,6 +58,12 @@ def q_round(x): return round(x, 3)
 
 def score(task, text, tag):
     s = {"out_tokens_tiktoken": len(ENC.encode(text))}; q = 0.0
+    if is_industry(task):
+        d = score_industry(task, text, tag)
+        q = d.pop("quality", 0.0)
+        s.update(d)
+        s["quality"] = q_round(q)
+        return s
     if task in ("02_ui_script", "03_api_tests", "04_test_review", "08_flaky"):
         code = code_block(text); s["has_code"] = int(bool(code))
         cq = 0
@@ -142,6 +149,41 @@ JUDGE_PROMPT = """You are grading two answers to the same software-testing reque
 </answer_B>
 Return only JSON: {{"A": <1-10>, "B": <1-10>, "winner": "A"|"B"|"tie", "reason": "<15 words"}}"""
 
+ABSOLUTE_JUDGE_PROMPT = """You are grading up to three answers to the same software-testing request. Judge only usefulness to a QA engineer: correctness against the input, coverage, no invented facts, directly usable output, and concision (penalize padding). Score typical quality (the median run) and consistency across runs.
+<request_input>
+{inp}
+</request_input>
+<answers>
+{answers}
+</answers>
+Return only JSON: {{"score": <1-10>, "consistency": <1-10>, "reason": "<15 words"}}"""
+
+def list_tasks(suite):
+    if suite == "industry":
+        return sorted(p.stem for p in (ROOT/"prompts"/"industry").glob("*.txt"))
+    return sorted(p.stem for p in (ROOT/"prompts"/"original").glob("*.txt"))
+
+def prompt_file(task, variant, suite):
+    if suite == "industry":
+        if variant == "original":
+            return ROOT/"prompts"/"industry-original"/f"{task}.txt"
+        return ROOT/"prompts"/"industry"/f"{task}.txt"
+    return ROOT/"prompts"/variant/f"{task}.txt"
+
+def select_tasks(all_tasks, tasks_arg):
+    if not tasks_arg:
+        return all_tasks
+    wanted = [w.strip() for w in tasks_arg.split(",") if w.strip()]
+    chosen = [t for t in all_tasks if t in wanted or t[:2] in wanted or any(t.startswith(w) for w in wanted)]
+    return chosen
+
+def suite_paths(suite):
+    if suite == "industry":
+        out = ROOT/"runs"/"industry"/"outputs"; out.mkdir(parents=True, exist_ok=True)
+        return out, ROOT/"runs"/"industry"/"judge.json", ROOT/"results"/"industry_quality.csv"
+    out = ROOT/"runs"/"outputs"; out.mkdir(parents=True, exist_ok=True)
+    return out, ROOT/"runs"/"judge.json", ROOT/"results"/"results_quality.csv"
+
 def parse_judge(txt, need):
     """First JSON object in the reply containing the needed keys (tolerates fences, prose, braces in reasons)."""
     dec = json.JSONDecoder()
@@ -155,62 +197,98 @@ def parse_judge(txt, need):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--runs", type=int, default=3); ap.add_argument("--model", default=os.environ.get("EVAL_MODEL", "claude-haiku-5-5")); ap.add_argument("--judge", default=os.environ.get("EVAL_JUDGE", "claude-sonnet-5-5"))
-    ap.add_argument("--tasks"); ap.add_argument("--variants", default="original,optimized"); ap.add_argument("--score-only", action="store_true"); ap.add_argument("--no-judge", action="store_true")
-    ap.add_argument("--judge-spec", choices=["neutral", "original"], default="neutral", help="neutral: judge sees a neutral task + inputs (default); original: judge sees the original prompt")
+    ap.add_argument("--suite", choices=["general", "industry"], default="general")
+    ap.add_argument("--tasks"); ap.add_argument("--variants", default=""); ap.add_argument("--score-only", action="store_true"); ap.add_argument("--no-judge", action="store_true")
+    ap.add_argument("--judge-spec", choices=["neutral", "original"], default="neutral", help="general pairwise judge input. neutral: neutral task + inputs (default); original: the original prompt")
     a = ap.parse_args()
     if not a.score_only and not any(os.environ.get(k) for k in ("ANTHROPIC_API_KEY", "MODELS_API_KEY", "GITHUB_TOKEN")): sys.exit("set ANTHROPIC_API_KEY (claude-* models) or MODELS_URL + MODELS_API_KEY")
-    tasks = sorted(p.stem for p in (ROOT/"prompts"/"original").glob("*.txt"))
-    if a.tasks: tasks = [t for t in tasks if t[:2] in a.tasks.split(",")]
-    variants = a.variants.split(",")
+    tasks = select_tasks(list_tasks(a.suite), a.tasks)
+    if a.variants:
+        variants = a.variants.split(",")
+    elif a.suite == "industry":
+        # A/B only when a credited public original exists for that task.
+        variants = ["optimized"]
+    else:
+        variants = ["original", "optimized"]
+    out_dir, jpath, csv_path = suite_paths(a.suite)
+    if a.suite == "general" and a.judge_spec == "original": jpath = jpath.with_name("judge_original_spec.json")
     errors = []
     if not a.score_only:
         for t in tasks:
-            for v in variants:
-                prompt = render((ROOT/"prompts"/v/f"{t}.txt").read_text())
+            vs = list(variants)
+            if a.suite == "industry" and "original" in vs and not prompt_file(t, "original", a.suite).exists():
+                vs = [v for v in vs if v != "original"]
+            for v in vs:
+                prompt = render(prompt_file(t, v, a.suite).read_text())
                 for i in range(1, a.runs+1):
                     try: text, pin, pout, dt = call(a.model, prompt, max_tokens=8000)
                     except Exception as e:
                         print(f"GENERATION FAILED {t} {v} run{i}: {e}", flush=True); errors.append(f"{t}.{v}.{i}: {e}"); continue
-                    (OUT/f"{t}.{v}.{i}.md").write_text(text)
-                    (OUT/f"{t}.{v}.{i}.meta.json").write_text(json.dumps({"model": a.model, "prompt_tokens": pin, "completion_tokens": pout, "seconds": dt}))
+                    (out_dir/f"{t}.{v}.{i}.md").write_text(text)
+                    (out_dir/f"{t}.{v}.{i}.meta.json").write_text(json.dumps({"model": a.model, "prompt_tokens": pin, "completion_tokens": pout, "seconds": dt}))
                     print(f"{t} {v} run{i}: in={pin} out={pout} {dt}s", flush=True)
-    # judge (blind, randomized order) for each run pair
-    jpath = ROOT/"runs"/("judge.json" if a.judge_spec == "neutral" else "judge_original_spec.json"); judge = json.loads(jpath.read_text()) if jpath.exists() else {}
+    judge = json.loads(jpath.read_text()) if jpath.exists() else {}
     if not a.no_judge:
         for t in tasks:
-            if a.judge_spec == "neutral": inp = judge_input(t, ROOT)
+            orig_p = prompt_file(t, "original", a.suite)
+            src = orig_p if orig_p.exists() else prompt_file(t, "optimized", a.suite)
+            if a.suite == "general" and a.judge_spec == "neutral" and t in NEUTRAL: inp = judge_input(t, ROOT)
             else:
-                inp = render((ROOT/"prompts"/"original"/f"{t}.txt").read_text())
-                if t[:2] in ("02", "04", "12"):  # give the judge the real page so it can check selectors
+                inp = render(src.read_text())
+                if a.suite == "general" and t[:2] in ("02", "04", "12"):  # give the judge the real page so it can check selectors
                     inp += "\n\n[Judge reference: real page aria snapshot]\n" + (ROOT/"inputs"/"locators.md").read_text()
-            for i in range(1, a.runs+1):
-                key = f"{t}.{i}"; fo, fz = OUT/f"{t}.original.{i}.md", OUT/f"{t}.optimized.{i}.md"
-                if not (fo.exists() and fz.exists()): continue
-                stamp = f"{fo.stat().st_mtime:.0f}-{fz.stat().st_mtime:.0f}"
+            has_pair = all((out_dir/f"{t}.original.{i}.md").exists() and (out_dir/f"{t}.optimized.{i}.md").exists() for i in range(1, a.runs+1))
+            if has_pair:
+                for i in range(1, a.runs+1):
+                    key = f"{t}.{i}"; fo, fz = out_dir/f"{t}.original.{i}.md", out_dir/f"{t}.optimized.{i}.md"
+                    stamp = f"{fo.stat().st_mtime:.0f}-{fz.stat().st_mtime:.0f}"
+                    if key in judge and judge[key].get("stamp") == stamp: continue
+                    flip = random.Random(key+stamp).random() < 0.5
+                    A, B = (fz, fo) if flip else (fo, fz)
+                    try: txt, *_ = call(a.judge, JUDGE_PROMPT.format(inp=inp, a=A.read_text()[:40000], b=B.read_text()[:40000]), max_tokens=1500, min_gap=2.0, temperature=0)
+                    except Exception as e:
+                        print(f"JUDGE FAILED {key}: {e}", flush=True); errors.append(f"judge {key}: {e}"); continue
+                    j = parse_judge(txt, ("A", "B")) or {"A": None, "B": None, "winner": "parse_error"}
+                    opt_s, org_s = (j.get("A"), j.get("B")) if flip else (j.get("B"), j.get("A"))
+                    w = j.get("winner"); win = {"A": "optimized" if flip else "original", "B": "original" if flip else "optimized"}.get(w, w)
+                    judge[key] = {"stamp": stamp, "optimized": opt_s, "original": org_s, "winner": win, "reason": j.get("reason")}
+                    jpath.parent.mkdir(parents=True, exist_ok=True)
+                    jpath.write_text(json.dumps(judge, indent=1)); print(f"judge {key}: {win} ({org_s} vs {opt_s})", flush=True)
+            else:
+                # Absolute judge: one call per prompt (all runs), to stay within the free-tier daily cap.
+                runs = [out_dir/f"{t}.optimized.{i}.md" for i in range(1, a.runs+1) if (out_dir/f"{t}.optimized.{i}.md").exists()]
+                if not runs:
+                    continue
+                key = t
+                stamp = "-".join(f"{f.stat().st_mtime:.0f}" for f in runs)
                 if key in judge and judge[key].get("stamp") == stamp: continue
-                flip = random.Random(key+stamp).random() < 0.5
-                A, B = (fz, fo) if flip else (fo, fz)
-                try: txt, *_ = call(a.judge, JUDGE_PROMPT.format(inp=inp, a=A.read_text()[:40000], b=B.read_text()[:40000]), max_tokens=1500, min_gap=2.0, temperature=0)
+                answers = "\n\n".join(f"<run n=\"{i+1}\">\n{f.read_text()[:20000]}\n</run>" for i, f in enumerate(runs))
+                try: txt, *_ = call(a.judge, ABSOLUTE_JUDGE_PROMPT.format(inp=inp[:20000], answers=answers[:60000]), max_tokens=1500, min_gap=2.0, temperature=0)
                 except Exception as e:
                     print(f"JUDGE FAILED {key}: {e}", flush=True); errors.append(f"judge {key}: {e}"); continue
-                j = parse_judge(txt, ("A", "B")) or {"A": None, "B": None, "winner": "parse_error"}
-                opt_s, org_s = (j.get("A"), j.get("B")) if flip else (j.get("B"), j.get("A"))
-                w = j.get("winner"); win = {"A": "optimized" if flip else "original", "B": "original" if flip else "optimized"}.get(w, w)
-                judge[key] = {"stamp": stamp, "optimized": opt_s, "original": org_s, "winner": win, "reason": j.get("reason")}
-                jpath.write_text(json.dumps(judge, indent=1)); print(f"judge {key}: {win} ({org_s} vs {opt_s})", flush=True)
+                j = parse_judge(txt, ("score",)) or {"score": None, "consistency": None, "reason": "parse_error"}
+                judge[key] = {"stamp": stamp, "score": j.get("score"), "consistency": j.get("consistency"), "reason": j.get("reason"), "mode": "absolute"}
+                jpath.parent.mkdir(parents=True, exist_ok=True)
+                jpath.write_text(json.dumps(judge, indent=1)); print(f"judge {key}: score={j.get('score')} consistency={j.get('consistency')}", flush=True)
     rows = []
-    for f in sorted(OUT.glob("*.md")):
-        t, v, i = f.stem.split(".")
-        meta = json.loads((OUT/f"{f.stem}.meta.json").read_text())
-        jd = judge.get(f"{t}.{i}", {})
-        rows.append({"task": t, "variant": v, "run": int(i), **meta, "total_tokens": (meta["prompt_tokens"] or 0)+(meta["completion_tokens"] or 0),
-                     "judge_score": jd.get(v), "judge_winner": jd.get("winner"), **score(t, f.read_text(), f"{t}_{v}_{i}")})
+    for f in sorted(out_dir.glob("*.md")):
+        parts = f.stem.split(".")
+        if len(parts) != 3: continue
+        t, v, i = parts
+        if t not in tasks: continue
+        meta_f = out_dir/f"{f.stem}.meta.json"
+        meta = json.loads(meta_f.read_text()) if meta_f.exists() else {"model": "", "prompt_tokens": 0, "completion_tokens": 0, "seconds": 0}
+        jd = judge.get(f"{t}.{i}", {}) or judge.get(t, {})
+        rows.append({"task": t, "variant": v, "run": int(i), "suite": a.suite, **meta, "total_tokens": (meta.get("prompt_tokens") or 0)+(meta.get("completion_tokens") or 0),
+                     "judge_score": jd.get(v, jd.get("score")), "judge_winner": jd.get("winner"), "judge_consistency": jd.get("consistency"),
+                     **score(t, f.read_text(), f"{t}_{v}_{i}")})
     keys = []; [keys.append(k) for r in rows for k in r if k not in keys]
-    with open(ROOT/"results"/"results_quality.csv", "w", newline="") as fh:
+    csv_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(csv_path, "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=keys); w.writeheader(); w.writerows(rows)
-    (ROOT/"results"/"errors.txt").write_text("\n".join(errors))
-    print(f"spend so far: ${spend()['usd']:.4f}")
-    print(f"wrote results_quality.csv ({len(rows)} rows); {len(errors)} errors")
+    err_path = ROOT/"results"/("industry_errors.txt" if a.suite == "industry" else "errors.txt")
+    err_path.write_text("\n".join(errors))
+    print(f"spend so far: ${spend()['usd']:.4f}"); print(f"wrote {csv_path} ({len(rows)} rows); {len(errors)} errors")
     gen_fail = [e for e in errors if not e.startswith("judge")]
     if not a.score_only and not rows:
         sys.exit(f"FAILED: all {len(gen_fail)} generation calls failed; first error: {gen_fail[0] if gen_fail else 'n/a'}")

@@ -1,6 +1,10 @@
-"""Harness self-test: score hand-written reference/bad outputs. NOT model results."""
-import json
+"""Harness self-test: score hand-written reference/bad outputs. NOT model results.
+General (01-12) fixtures only. Industry fixtures: python eval/industry_selftest.py
+"""
+import json, re
 from run_eval import score, ROOT
 for f in sorted((ROOT/"eval"/"selftest").glob("*.md")):
+    if not re.match(r"\d{2}_", f.name):
+        continue
     task = f.name.split(".")[0]
     print(f.name, json.dumps(score(task, f.read_text(), "selftest_"+f.stem.replace(".","_"))))

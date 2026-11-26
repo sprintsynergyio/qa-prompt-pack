@@ -1,0 +1,18 @@
+{
+ "ec01_cart_checkout": "ok",
+ "ec02_discounts_tax": "strong",
+ "ec03_inventory_race": "ok",
+ "ec04_peak_load": "ok",
+ "fi01_rounding_currency": "strong",
+ "fi02_payment_refund": "ok",
+ "fi03_fraud_limits": "ok",
+ "fi04_audit_trail": "ok",
+ "hc01_phi_testdata": "strong",
+ "hc02_clinical_flows": "ok",
+ "hc03_phi_leakage": "strong",
+ "hc04_accessibility": "ok",
+ "sa01_rbac_matrix": "ok",
+ "sa02_tenant_isolation": "ok",
+ "sa03_billing_proration": "strong",
+ "sa04_api_contract": "strong"
+}

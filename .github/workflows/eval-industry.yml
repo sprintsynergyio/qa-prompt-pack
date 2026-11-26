@@ -1,0 +1,67 @@
+name: prompt-eval-industry
+on:
+  workflow_dispatch:
+    inputs:
+      runs: { description: "runs per prompt variant", default: "3" }
+      model: { description: "generation model", default: "claude-haiku-5-5" }
+      judge: { description: "judge model", default: "claude-sonnet-5-5" }
+      tasks: { description: "comma list of task ids; empty = all", default: "" }
+permissions:
+  contents: read
+  models: read          # harmless; GitHub Models itself was retired on 30 Jul 2026
+concurrency:
+  group: prompt-eval-industry-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      RUNS: ${{ inputs.runs || '3' }}
+      MODEL: ${{ inputs.model || 'claude-haiku-5-5' }}
+      JUDGE: ${{ inputs.judge || 'claude-sonnet-5-5' }}
+      TASKS: ${{ inputs.tasks || '' }}
+      MODELS_URL: ${{ vars.MODELS_URL || 'https://api.openai.com/v1/chat/completions' }}
+      BUDGET_USD: ${{ vars.BUDGET_USD || '3' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r eval/requirements.txt
+      - run: cd eval/harness && npm ci && npx playwright install --with-deps chromium
+      - name: Install k6
+        run: |
+          curl -sL https://github.com/grafana/k6/releases/download/v0.54.0/k6-v0.54.0-linux-amd64.tar.gz | tar xz
+          echo "K6_BIN=$PWD/k6-v0.54.0-linux-amd64/k6" >> $GITHUB_ENV
+      - run: python eval/count_tokens.py --suite industry
+      - name: Domain-check selftest (no models)
+        run: python eval/industry_selftest.py
+      - name: Model key present?
+        id: keys
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          MODELS_API_KEY: ${{ secrets.MODELS_API_KEY }}
+        run: |
+          if [ -n "$ANTHROPIC_API_KEY$MODELS_API_KEY" ]; then echo "ok=true" >> $GITHUB_OUTPUT
+          else echo "ok=false" >> $GITHUB_OUTPUT; echo "::notice::No ANTHROPIC_API_KEY or MODELS_API_KEY secret; skipping model calls. Committed results come from local runs (see results/)."; fi
+      - name: Run eval
+        if: steps.keys.outputs.ok == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          MODELS_API_KEY: ${{ secrets.MODELS_API_KEY }}
+        run: |
+          ARGS="--suite industry --runs $RUNS --model $MODEL --judge $JUDGE"
+          if [ -n "$TASKS" ]; then ARGS="$ARGS --tasks $TASKS"; fi
+          python eval/run_eval.py $ARGS
+      - name: Summarize
+        if: steps.keys.outputs.ok == 'true'
+        run: python eval/summarize.py --suite industry || true
+      - uses: actions/upload-artifact@v4
+        if: steps.keys.outputs.ok == 'true'
+        with:
+          name: industry-eval-results
+          path: |
+            results/
+            runs/industry/

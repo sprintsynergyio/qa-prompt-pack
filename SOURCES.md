@@ -17,3 +17,9 @@ The files in `prompts/original/` are popular public prompts. We quote them for s
 | 12_locator_fix | simplified.guide, https://www.simplified.guide/selenium/ai-selector-update |
 
 Systems under test are public demos: https://demo.playwright.dev/todomvc/ and https://jsonplaceholder.typicode.com.
+
+## Industry packs (v0.2)
+The files in `prompts/industry/` were written for this pack and are covered by the repo MIT license. There is no quoted "original" to compare: short public industry prompts that matched these tasks were not used, and we did not copy long vendor articles. Research that informed the themes (not the prompt wording) is in [research/industry_sources.md](research/industry_sources.md).
+
+If a short, credited public original is added later, place it in `prompts/industry-original/` with the same filename; the harness will then run a blind original-vs-optimized judge for that task only.
+

@@ -1,0 +1,5 @@
+Contract tests for this public API only. Assert documented status, required fields and types, and error shape. Undocumented endpoints, fields or status codes → a note, do not invent them as required. Pagination and 401/404 are in scope.
+Output only: table ID|Op|Request|Expected status|Schema assertions, max 20 rows.
+<spec>
+{{sa-api-contract.md}}
+</spec>

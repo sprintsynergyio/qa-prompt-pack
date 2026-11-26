@@ -1,0 +1,5 @@
+k6 script for this peak profile: stages ramp 0→100 in 2m, hold 100 for 5m, spike 300 for 1m, down 50 for 3m. Thresholds http_req_duration p(95)<800 and p(99)<1500, http_req_failed rate<0.02. Random sleep 1-3s. check() each response: 200 or documented 409 sold-out, never treat 5xx as success. Include the hot-SKU checkout path.
+Output: one ```js block.
+<journey>
+{{ec-peak-load.md}}
+</journey>
