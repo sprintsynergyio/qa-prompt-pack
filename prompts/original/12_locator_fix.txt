@@ -1,0 +1,1 @@
+Given this failing Selenium locator and current HTML, return one stable Python CSS selector only. Prefer data-testid, id, name, or aria attributes before classes. {{old-locator.md}} HTML: {{dom.html}}

@@ -1,0 +1,5 @@
+Generate a JSON dataset with 10 valid and 10 invalid todo objects for todo-creation testing.
+Include boundary values, unicode, special characters, and missing fields.
+Return as a single JSON array.
+
+{{data-schema.md}}

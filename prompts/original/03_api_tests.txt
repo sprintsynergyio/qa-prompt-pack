@@ -1,0 +1,5 @@
+Generate API tests for POST /todos at https://jsonplaceholder.typicode.com. Test successful creation
+with valid data, validation errors for missing fields, and duplicate handling.
+Use the Playwright Test (TypeScript, request fixture) framework.
+
+{{api.md}}

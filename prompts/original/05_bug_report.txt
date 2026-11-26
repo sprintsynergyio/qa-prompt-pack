@@ -1,0 +1,17 @@
+Convert my raw notes into a properly formatted bug report.
+
+RAW NOTES:
+{{bug-notes.md}}
+
+FORMAT:
+Title: [Component] - one-line description
+Severity: Critical | High | Medium | Low, justify in one sentence
+Environment: browser/OS/app version, write "NOT SPECIFIED" if missing
+Steps to Reproduce: numbered list
+Expected Result:
+Actual Result:
+
+RULES:
+- Do not soften severity to sound less serious than the notes suggest.
+- If a reproduction step is missing from my notes, write "STEP MISSING"
+  rather than inventing a plausible-sounding one.

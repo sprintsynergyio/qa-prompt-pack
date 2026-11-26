@@ -1,0 +1,4 @@
+Convert this Playwright user journey into a k6 load script. 50 VUs for 5 min,
+p95 < 800ms, error rate < 1%. Add think time 1-3s between requests.
+
+{{load-journey.md}}

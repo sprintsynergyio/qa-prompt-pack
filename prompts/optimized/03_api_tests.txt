@@ -1,0 +1,5 @@
+Playwright TS API tests (request fixture). Assert status + all documented fields. Undocumented behavior (validation, duplicates) → test.fixme + reason.
+Output: one ```ts block.
+<spec>
+{{api.md}}
+</spec>

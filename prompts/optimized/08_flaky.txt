@@ -1,0 +1,8 @@
+Why does this Playwright test fail? Use the code and log as evidence.
+Output only: Cause (cite lines), Evidence (log lines), Fix (one ```ts block: full corrected file, no waitForTimeout, each test creates its own data).
+<test>
+{{flaky.spec.ts}}
+</test>
+<log>
+{{flaky.log}}
+</log>

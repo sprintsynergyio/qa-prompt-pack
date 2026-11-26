@@ -1,0 +1,254 @@
+{
+ "01_test_cases.2": {
+  "stamp": "1795710248-1795710308",
+  "optimized": 5,
+  "original": 8,
+  "winner": "original",
+  "reason": "B covers security, max-boundary and clarification cases per the request; A omits security and uses wrong column format."
+ },
+ "02_ui_script.1": {
+  "stamp": "1795710340-1795710383",
+  "optimized": 4,
+  "original": 8,
+  "winner": "original",
+  "reason": "B meets describe, beforeEach, teardown and branch-test requirements; A omits all three. B's text-input testid is unverified."
+ },
+ "02_ui_script.2": {
+  "stamp": "1795710358-1795710390",
+  "optimized": 4,
+  "original": 7,
+  "winner": "original",
+  "reason": "A meets describe/beforeEach/teardown/comments/branches but wrongly claims no data-testid; B uses testids yet omits required structure."
+ },
+ "02_ui_script.3": {
+  "stamp": "1795710376-1795710396",
+  "optimized": 6,
+  "original": 4,
+  "winner": "optimized",
+  "reason": "A wrongly claims no data-testids and its listitem assertions also match footer filter items, so they fail; B works but omits describe/hooks."
+ },
+ "03_api_tests.2": {
+  "stamp": "1795710437-1795710479",
+  "optimized": 4,
+  "original": 8,
+  "winner": "original",
+  "reason": "A covers missing fields, wrong types and duplicates, documenting real behavior; B skips them via fixme and adds off-topic GET tests."
+ },
+ "03_api_tests.3": {
+  "stamp": "1795710457-1795710488",
+  "optimized": 4,
+  "original": 8,
+  "winner": "original",
+  "reason": "B runs real validation and duplicate tests asserting actual behavior, with paired known-gap tests; A skips them with fixme."
+ },
+ "04_test_review.1": {
+  "stamp": "1795710877-1795710937",
+  "optimized": 8,
+  "original": 6,
+  "winner": "optimized",
+  "reason": "A is concise, its refactor works and fits the snapshot; B is longer, and its final listitem assertion would also match footer filter items."
+ },
+ "04_test_review.2": {
+  "stamp": "1795710902-1795710953",
+  "optimized": 6,
+  "original": 7,
+  "winner": "original",
+  "reason": "A covers all five requested areas thoroughly; its rewrite's broad listitem locator would also match footer filter items. B is concise but skips isolation and readability sections."
+ },
+ "04_test_review.3": {
+  "stamp": "1795710925-1795710967",
+  "optimized": 5,
+  "original": 7,
+  "winner": "original",
+  "reason": "B covers all five requested areas; A skips isolation and its final assertion expects an unseen 'walk dog' item. B's broad listitem locator also catches filter items."
+ },
+ "05_bug_report.2": {
+  "stamp": "1795710986-1795711011",
+  "optimized": 5,
+  "original": 7,
+  "winner": "original",
+  "reason": "B follows format and severity rules (High, NOT SPECIFIED); A softens severity, uses 'Unknown', though it catches count discrepancy."
+ },
+ "05_bug_report.3": {
+  "stamp": "1795710997-1795711017",
+  "optimized": 4,
+  "original": 8,
+  "winner": "original",
+  "reason": "A follows format rules (NOT SPECIFIED, STEP MISSING, valid severities) and splits bugs; B uses 'M', 'Unknown', and downplays persistence severity."
+ },
+ "06_edge_cases.2": {
+  "stamp": "1795711071-1795711118",
+  "optimized": 5,
+  "original": 8,
+  "winner": "original",
+  "reason": "B covers SQL injection, edit mode, and trim edge cases (NBSP, zero-width); A omits SQL payloads entirely, though it is more concise."
+ },
+ "07_test_data.1": {
+  "stamp": "1795711145-1795711189",
+  "optimized": 3,
+  "original": 9,
+  "winner": "original",
+  "reason": "B covers unicode, special characters, boundaries and missing fields; A omits unicode and special characters and has redundant, mislabeled cases."
+ },
+ "07_test_data.2": {
+  "stamp": "1795711161-1795711204",
+  "optimized": 3,
+  "original": 9,
+  "winner": "original",
+  "reason": "A covers unicode, special characters, boundaries and missing fields; B omits unicode/special characters, repeats cases, and its max titles look over 200 chars."
+ },
+ "07_test_data.3": {
+  "stamp": "1795711175-1795711217",
+  "optimized": 3,
+  "original": 8,
+  "winner": "original",
+  "reason": "B has 10+10 cases with unicode, special characters and missing fields; A has only 9 valid and lacks them."
+ },
+ "08_flaky.1": {
+  "stamp": "1795711239-1795711290",
+  "optimized": 5,
+  "original": 7,
+  "winner": "original",
+  "reason": "A covers all four requested items with confirming symptoms and fixes; B gives one cause and skips most of the structure."
+ },
+ "08_flaky.2": {
+  "stamp": "1795711261-1795711299",
+  "optimized": 5,
+  "original": 7,
+  "winner": "original",
+  "reason": "B covers all four requested parts with confirming symptoms and fixes; A is concise but omits ranking and symptoms."
+ },
+ "08_flaky.3": {
+  "stamp": "1795711281-1795711307",
+  "optimized": 6,
+  "original": 7,
+  "winner": "original",
+  "reason": "B covers all four requested parts and flags the non-retrying assertion; A is concise but lists one cause and skips confirming symptoms."
+ },
+ "09_test_plan.1": {
+  "stamp": "1795711341-1795711417",
+  "optimized": 7,
+  "original": 6,
+  "winner": "optimized",
+  "reason": "B is complete, concise and risk-focused; A is detailed with test cases but truncated mid-schedule and padded."
+ },
+ "09_test_plan.3": {
+  "stamp": "1795711405-1795711438",
+  "optimized": 6,
+  "original": 7,
+  "winner": "original",
+  "reason": "B gives concrete scenarios, steps, and expected results with sensible assumptions; A is concise but lacks usable test cases, though B is padded."
+ },
+ "10_load_script.1": {
+  "stamp": "1795711447-1795711471",
+  "optimized": 8,
+  "original": 6,
+  "winner": "optimized",
+  "reason": "A is concise and correct; B adds useful extras but has a wrong iteration estimate and padding."
+ },
+ "10_load_script.2": {
+  "stamp": "1795711457-1795711475",
+  "optimized": 7,
+  "original": 8,
+  "winner": "original",
+  "reason": "B adds validation commands, BASE_URL override, and notes the missing Playwright source; slightly padded but more useful."
+ },
+ "10_load_script.3": {
+  "stamp": "1795711467-1795711479",
+  "optimized": 7,
+  "original": 7,
+  "winner": "tie",
+  "reason": "Both scripts are correct; B adds useful thresholds and k6 inspect but also padding, A is concise."
+ },
+ "11_security.1": {
+  "stamp": "1795711511-1795711586",
+  "optimized": 6,
+  "original": 8,
+  "winner": "original",
+  "reason": "B follows the requested four-column format and covers all OWASP categories with tools; A is concise but misses the format and categories."
+ },
+ "11_security.2": {
+  "stamp": "1795711544-1795711597",
+  "optimized": 5,
+  "original": 8,
+  "winner": "original",
+  "reason": "A matches the requested columns and covers all OWASP categories; B drops columns, categories, and guesses the storage key."
+ },
+ "11_security.3": {
+  "stamp": "1795711574-1795711608",
+  "optimized": 5,
+  "original": 8,
+  "winner": "original",
+  "reason": "A follows the requested table and maps A01\u2013A10; B omits categories, tool column, and OWASP mapping."
+ },
+ "12_locator_fix.2": {
+  "stamp": "1795711612-1795711616",
+  "optimized": 1,
+  "original": 8,
+  "winner": "original",
+  "reason": "A is a JavaScript Playwright locator, not a Python CSS selector; B is a valid CSS selector with a brief, correct explanation."
+ },
+ "12_locator_fix.3": {
+  "stamp": "1795711614-1795711618",
+  "optimized": 2,
+  "original": 9,
+  "winner": "original",
+  "reason": "A is a valid Python CSS selector using data-testid and aria-label; B is a JS Playwright call, not CSS."
+ },
+ "01_test_cases.1": {
+  "stamp": "1795710223-1795710291",
+  "optimized": 4,
+  "original": 8,
+  "winner": "original",
+  "reason": "B covers all four required categories including security and boundary with clarifications; A omits security and has weak categories."
+ },
+ "01_test_cases.3": {
+  "stamp": "1795710274-1795710324",
+  "optimized": 4,
+  "original": 8,
+  "winner": "original",
+  "reason": "B covers security and boundary categories and flags ambiguities; A omits security entirely and mislabels categories."
+ },
+ "03_api_tests.1": {
+  "stamp": "1795710415-1795710468",
+  "optimized": 3,
+  "original": 8,
+  "winner": "original",
+  "reason": "B asserts real no-validation behavior with test.fail counterparts; A mostly fixmes, leaving little executable coverage."
+ },
+ "05_bug_report.1": {
+  "stamp": "1795710978-1795711003",
+  "optimized": 5,
+  "original": 8,
+  "winner": "original",
+  "reason": "A follows the format rules (High severity, STEP MISSING, NOT SPECIFIED) and catches the 3-1=2 count inconsistency; B softens severity and uses the wrong labels."
+ },
+ "06_edge_cases.1": {
+  "stamp": "1795711052-1795711108",
+  "optimized": 4,
+  "original": 8,
+  "winner": "original",
+  "reason": "B covers SQLi, XSS, boundaries and edit mode thoroughly with usable steps; A lacks SQLi and has many vague '?' results."
+ },
+ "06_edge_cases.3": {
+  "stamp": "1795711094-1795711130",
+  "optimized": 6,
+  "original": 8,
+  "winner": "original",
+  "reason": "A covers SQLi, XSS variants, and boundaries thoroughly with assertions; B omits SQL injection entirely and is thin."
+ },
+ "09_test_plan.2": {
+  "stamp": "1795711371-1795711427",
+  "optimized": 6,
+  "original": 8,
+  "winner": "original",
+  "reason": "B gives concrete test cases with steps and expected results plus open questions; A is concise but lacks usable cases."
+ },
+ "12_locator_fix.1": {
+  "stamp": "1795711610-1795711615",
+  "optimized": 1,
+  "original": 8,
+  "winner": "original",
+  "reason": "A gives a valid stable CSS selector (slightly wordy); B is Playwright JS, not a Python CSS selector."
+ }
+}

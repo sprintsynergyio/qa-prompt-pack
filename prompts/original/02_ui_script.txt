@@ -1,0 +1,11 @@
+Convert this user journey into step-by-step Playwright (TypeScript) test code:
+
+Journey: {{journey.md}}
+
+Requirements:
+- Use realistic selectors (prefer data-testid, then ARIA roles, then text)
+- Add assertions after each significant action
+- Include setup (beforeEach) and teardown
+- Add a comment explaining the intent of each block
+
+Output: a single describe() block with at least one it() per major flow branch.

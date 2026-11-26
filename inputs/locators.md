@@ -1,0 +1,26 @@
+- heading "todos" [level=1]
+- textbox "What needs to be done?"
+- checkbox "❯Mark all as complete"
+- text: ❯Mark all as complete
+- list:
+  - listitem:
+    - checkbox "Toggle Todo"
+    - text: buy milk
+  - listitem:
+    - checkbox "Toggle Todo" [checked]
+    - text: walk dog
+    - button "Delete": ×
+- strong: "1"
+- text: item left
+- list:
+  - listitem:
+    - link "All":
+      - /url: "#/"
+  - listitem:
+    - link "Active":
+      - /url: "#/active"
+  - listitem:
+    - link "Completed":
+      - /url: "#/completed"
+- button "Clear completed"
+# data-testid values: todo-item, todo-title, todo-count

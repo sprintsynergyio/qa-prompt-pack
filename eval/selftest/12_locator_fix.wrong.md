@@ -1,0 +1,1 @@
+page.getByRole('checkbox').first()

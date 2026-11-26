@@ -1,0 +1,14 @@
+{
+ "01_test_cases": "beat",
+ "02_ui_script": "beat",
+ "03_api_tests": "beat",
+ "04_test_review": "beat",
+ "05_bug_report": "beat",
+ "06_edge_cases": "beat",
+ "07_test_data": "beat",
+ "08_flaky": "beat",
+ "09_test_plan": "beat",
+ "10_load_script": "beat",
+ "11_security": "beat",
+ "12_locator_fix": "matched"
+}

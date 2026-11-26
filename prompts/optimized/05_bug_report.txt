@@ -1,0 +1,5 @@
+Bug report from these notes. Facts from notes only; missing = "Unknown"; guessed steps tagged [unconfirmed].
+Output only: Title (component - symptom), Severity H/M/L + 1-line reason, Environment, Steps, Expected, Actual, Questions (max 4, most blocking first).
+<notes>
+{{bug-notes.md}}
+</notes>

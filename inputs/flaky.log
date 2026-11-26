@@ -1,0 +1,17 @@
+  1) fixtures/flaky-order.spec.ts:10:1 › completes the todo ────────────────────────────────────────
+    Test timeout of 15000ms exceeded.
+    Error: locator.check: Test timeout of 15000ms exceeded.
+    Call log:
+      - waiting for locator('.toggle').first()
+      11 |   await page.goto('/todomvc/#/');
+      12 |   await page.waitForTimeout(1000);
+    > 13 |   await page.locator('.toggle').first().check();
+         |                                         ^
+      14 |   expect(await page.locator('.todo-count').textContent()).toBe('0 items left');
+      15 | });
+      16 |
+        at /workspace/prompt-pack/harness/fixtures/flaky-order.spec.ts:13:41
+    Error Context: test-results/flaky-order-completes-the-todo/error-context.md
+  1 failed
+    fixtures/flaky-order.spec.ts:10:1 › completes the todo ─────────────────────────────────────────
+  1 passed (16.4s)
