@@ -1,5 +1,5 @@
 """Aggregate quality CSV -> summary markdown (+ GitHub job summary if available).
-Usage: python summarize.py [--suite general|industry]"""
+Usage: python summarize.py [--suite general|manual|industry]"""
 import argparse, csv, os, pathlib, statistics as st, json, sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT/"eval"))
@@ -68,16 +68,29 @@ def summarize_industry(rows, out_md, out_json):
     out_md.write_text(md); out_json.write_text(json.dumps(verdicts, indent=1))
     return md
 
+def summarize_manual(rows, out_md, out_json):
+    paired = {r["task"] for r in rows if r["variant"] == "original"}
+    pr = [r for r in rows if r["task"] in paired]; sr = [r for r in rows if r["task"] not in paired]
+    tmp = out_json.with_suffix(".tmp.json"); md = ""; verdicts = {}
+    if pr:
+        md += summarize_general(pr, out_md, tmp).replace("## General suite", "## Manual testing: original vs optimized"); verdicts.update(json.loads(tmp.read_text()))
+    if sr:
+        md += "\n" + summarize_industry(sr, out_md, tmp).replace("## Industry suite", "## Manual testing: standalone (no public original)"); verdicts.update(json.loads(tmp.read_text()))
+    tmp.unlink(missing_ok=True); out_md.write_text(md); out_json.write_text(json.dumps(verdicts, indent=1))
+    return md
+
+FILES = {"general": ("results_quality.csv", "summary.md", "verdicts.json"),
+         "industry": ("industry_quality.csv", "industry_summary.md", "industry_verdicts.json"),
+         "manual": ("manual_quality.csv", "manual_summary.md", "manual_verdicts.json")}
+
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument("--suite", choices=["general", "industry"], default="general"); a = ap.parse_args()
-    ind = a.suite == "industry"
-    csv_path = ROOT/"results"/("industry_quality.csv" if ind else "results_quality.csv")
-    out_md = ROOT/"results"/("industry_summary.md" if ind else "summary.md")
-    out_json = ROOT/"results"/("industry_verdicts.json" if ind else "verdicts.json")
+    ap = argparse.ArgumentParser(); ap.add_argument("--suite", choices=["general", "manual", "industry"], default="general"); a = ap.parse_args()
+    c, m, j = FILES[a.suite]
+    csv_path, out_md, out_json = ROOT/"results"/c, ROOT/"results"/m, ROOT/"results"/j
     if not csv_path.exists(): print(f"no {csv_path}; skip"); return
     rows = list(csv.DictReader(open(csv_path)))
     if not rows: print(f"{csv_path} empty; skip"); return
-    md = summarize_industry(rows, out_md, out_json) if ind else summarize_general(rows, out_md, out_json)
+    md = {"industry": summarize_industry, "manual": summarize_manual}.get(a.suite, summarize_general)(rows, out_md, out_json)
     s = spend(); md += f"\nTotal API spend recorded in {os.environ.get('SPEND_FILE', 'runs/spend.json')}: ${s['usd']:.4f} over {s['calls']} calls.\n"
     out_md.write_text(md)
     if os.environ.get("GITHUB_STEP_SUMMARY"): open(os.environ["GITHUB_STEP_SUMMARY"], "a").write(md)

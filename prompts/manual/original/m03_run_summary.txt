@@ -1,0 +1,1 @@
+Summarize this list of test results into a short test summary report: {{m-run-results.md}}, including pass/fail counts and key risks.

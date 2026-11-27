@@ -3,13 +3,14 @@
 Providers (eval/providers.py): Anthropic Messages API for claude-* models (ANTHROPIC_API_KEY), or any OpenAI-compatible
 endpoint (MODELS_URL + MODELS_API_KEY). GitHub Models was retired on 30 Jul 2026. Keys come from env only and are never printed.
 Spend is tracked from API usage (SPEND_FILE, default runs/spend.json) and capped by BUDGET_USD (default 3).
-Usage: python eval/run_eval.py [--suite general|industry] [--runs 3] [--model claude-haiku-5-5] [--judge claude-sonnet-5-5] [--tasks 01,02 or hc01,fi02] [--variants original,optimized] [--score-only] [--no-judge]
+Usage: python eval/run_eval.py [--suite general|manual|industry] [--runs 3] [--model claude-haiku-5-5] [--judge claude-sonnet-5-5] [--tasks 01,02 or hc01,fi02] [--variants original,optimized] [--score-only] [--no-judge]
 Outputs: runs/outputs/* or runs/industry/*, results/results_quality.csv or results/industry_quality.csv"""
 import argparse, csv, json, os, pathlib, random, re, subprocess, sys, time, urllib.request, urllib.error
 import tiktoken
 from build_prompts import render, ROOT
 from providers import call, spend
 from industry_score import is_industry, score_industry
+from manual_score import is_manual, score_manual
 from judge_tasks import judge_input, NEUTRAL
 ENC = tiktoken.get_encoding("o200k_base")
 OUT = ROOT/"runs"/"outputs"; OUT.mkdir(parents=True, exist_ok=True)
@@ -58,8 +59,8 @@ def q_round(x): return round(x, 3)
 
 def score(task, text, tag):
     s = {"out_tokens_tiktoken": len(ENC.encode(text))}; q = 0.0
-    if is_industry(task):
-        d = score_industry(task, text, tag)
+    if is_industry(task) or is_manual(task):
+        d = score_manual(task, text, tag) if is_manual(task) else score_industry(task, text, tag)
         q = d.pop("quality", 0.0)
         s.update(d)
         s["quality"] = q_round(q)
@@ -159,11 +160,15 @@ ABSOLUTE_JUDGE_PROMPT = """You are grading up to three answers to the same softw
 Return only JSON: {{"score": <1-10>, "consistency": <1-10>, "reason": "<15 words"}}"""
 
 def list_tasks(suite):
+    if suite == "manual":
+        return sorted(p.stem for p in (ROOT/"prompts"/"manual"/"optimized").glob("*.txt"))
     if suite == "industry":
         return sorted(p.stem for p in (ROOT/"prompts"/"industry").glob("*.txt"))
     return sorted(p.stem for p in (ROOT/"prompts"/"original").glob("*.txt"))
 
 def prompt_file(task, variant, suite):
+    if suite == "manual":
+        return ROOT/"prompts"/"manual"/variant/f"{task}.txt"
     if suite == "industry":
         if variant == "original":
             return ROOT/"prompts"/"industry-original"/f"{task}.txt"
@@ -178,6 +183,9 @@ def select_tasks(all_tasks, tasks_arg):
     return chosen
 
 def suite_paths(suite):
+    if suite == "manual":
+        out = ROOT/"runs"/"manual"/"outputs"; out.mkdir(parents=True, exist_ok=True)
+        return out, ROOT/"runs"/"manual"/"judge.json", ROOT/"results"/"manual_quality.csv"
     if suite == "industry":
         out = ROOT/"runs"/"industry"/"outputs"; out.mkdir(parents=True, exist_ok=True)
         return out, ROOT/"runs"/"industry"/"judge.json", ROOT/"results"/"industry_quality.csv"
@@ -197,7 +205,7 @@ def parse_judge(txt, need):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--runs", type=int, default=3); ap.add_argument("--model", default=os.environ.get("EVAL_MODEL", "claude-haiku-5-5")); ap.add_argument("--judge", default=os.environ.get("EVAL_JUDGE", "claude-sonnet-5-5"))
-    ap.add_argument("--suite", choices=["general", "industry"], default="general")
+    ap.add_argument("--suite", choices=["general", "manual", "industry"], default="general")
     ap.add_argument("--tasks"); ap.add_argument("--variants", default=""); ap.add_argument("--score-only", action="store_true"); ap.add_argument("--no-judge", action="store_true")
     ap.add_argument("--judge-spec", choices=["neutral", "original"], default="neutral", help="general pairwise judge input. neutral: neutral task + inputs (default); original: the original prompt")
     a = ap.parse_args()
@@ -216,7 +224,7 @@ def main():
     if not a.score_only:
         for t in tasks:
             vs = list(variants)
-            if a.suite == "industry" and "original" in vs and not prompt_file(t, "original", a.suite).exists():
+            if a.suite in ("industry", "manual") and "original" in vs and not prompt_file(t, "original", a.suite).exists():
                 vs = [v for v in vs if v != "original"]
             for v in vs:
                 prompt = render(prompt_file(t, v, a.suite).read_text())
@@ -232,7 +240,7 @@ def main():
         for t in tasks:
             orig_p = prompt_file(t, "original", a.suite)
             src = orig_p if orig_p.exists() else prompt_file(t, "optimized", a.suite)
-            if a.suite == "general" and a.judge_spec == "neutral" and t in NEUTRAL: inp = judge_input(t, ROOT)
+            if a.suite in ("general", "manual") and a.judge_spec == "neutral" and t in NEUTRAL: inp = judge_input(t, ROOT)
             else:
                 inp = render(src.read_text())
                 if a.suite == "general" and t[:2] in ("02", "04", "12"):  # give the judge the real page so it can check selectors
@@ -286,7 +294,7 @@ def main():
     csv_path.parent.mkdir(parents=True, exist_ok=True)
     with open(csv_path, "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=keys); w.writeheader(); w.writerows(rows)
-    err_path = ROOT/"results"/("industry_errors.txt" if a.suite == "industry" else "errors.txt")
+    err_path = ROOT/"results"/{"industry": "industry_errors.txt", "manual": "manual_errors.txt"}.get(a.suite, "errors.txt")
     err_path.write_text("\n".join(errors))
     print(f"spend so far: ${spend()['usd']:.4f}"); print(f"wrote {csv_path} ({len(rows)} rows); {len(errors)} errors")
     gen_fail = [e for e in errors if not e.startswith("judge")]

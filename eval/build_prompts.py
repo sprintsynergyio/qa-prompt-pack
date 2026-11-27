@@ -10,6 +10,9 @@ if __name__ == "__main__":
     for kind in ("original","optimized"):
         for p in sorted((ROOT/"prompts"/kind).glob("*.txt")):
             (out/f"{p.stem}.{kind}.txt").write_text(render(p.read_text()))
+    for kind in ("original","optimized"):
+        for p in sorted((ROOT/"prompts"/"manual"/kind).glob("*.txt")):
+            (out/f"{p.stem}.manual-{kind}.txt").write_text(render(p.read_text()))
     industry = ROOT/"prompts"/"industry"
     if industry.exists():
         for p in sorted(industry.glob("*.txt")):

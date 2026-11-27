@@ -1,0 +1,5 @@
+Cross-browser/device test matrix from this traffic data. Supported browsers only; rank by traffic share; real device where one exists, else cloud; full pass for the top combos, smoke for the rest, total hours within the budget.
+Output only: table Tier|Browser|OS/Device|Share|Real/Cloud|Pass (full/smoke)|Hours, a total-hours line, then Excluded (one line each, why).
+<data>
+{{m-browser-traffic.md}}
+</data>

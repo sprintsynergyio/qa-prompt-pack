@@ -1,0 +1,93 @@
+{
+ "m01_exploratory_charters.1": {
+  "stamp": "1795720481-1795720577",
+  "optimized": 8,
+  "original": 5,
+  "winner": "optimized",
+  "reason": "B is concise, grounded, has oracles and a notes template; A is padded, invents details, lacks notes template."
+ },
+ "m01_exploratory_charters.2": {
+  "stamp": "1795720521-1795720594",
+  "optimized": 8,
+  "original": 4,
+  "winner": "optimized",
+  "reason": "B is concise, grounded, with oracles and a notes template; A is padded, invents scope, truncated, lacks notes template."
+ },
+ "m01_exploratory_charters.3": {
+  "stamp": "1795720561-1795720612",
+  "optimized": 8,
+  "original": 6,
+  "winner": "optimized",
+  "reason": "B is concise, grounded, with oracles and a notes template; A is padded, invents scope and omits a notes template."
+ },
+ "m02_regression_checklist.1": {
+  "stamp": "1795720642-1795720713",
+  "optimized": 8,
+  "original": 4,
+  "winner": "optimized",
+  "reason": "A covers every change, skips CHG-106 with a reason, and stays concise; B pads, invents a missing table, and adds out-of-scope items."
+ },
+ "m02_regression_checklist.2": {
+  "stamp": "1795720675-1795720724",
+  "optimized": 8,
+  "original": 5,
+  "winner": "optimized",
+  "reason": "B covers every change, skips CHG-106 with a reason, and is concise; A pads and invents a missing table, extra scope, and exceeds the time box."
+ },
+ "m02_regression_checklist.3": {
+  "stamp": "1795720703-1795720734",
+  "optimized": 8,
+  "original": 4,
+  "winner": "optimized",
+  "reason": "B is a concise, complete checklist with CHG-106 skipped and time estimates; A is padded, invents a missing table, and skips CHG-106 handling."
+ },
+ "m03_run_summary.1": {
+  "stamp": "1795720739-1795720760",
+  "optimized": 8,
+  "original": 7,
+  "winner": "optimized",
+  "reason": "Both correct on totals and the draft's errors; B adds verified per-module pass rates, reconciliation, and open defects by severity."
+ },
+ "m03_run_summary.2": {
+  "stamp": "1795720745-1795720770",
+  "optimized": 9,
+  "original": 7,
+  "winner": "optimized",
+  "reason": "A's counts, per-module rates and flags are correct; B headlines 112 'executed' incl. blocked and says blocked are 'mostly' Checkout (3 of 6)."
+ },
+ "m03_run_summary.3": {
+  "stamp": "1795720752-1795720778",
+  "optimized": 9,
+  "original": 5,
+  "winner": "optimized",
+  "reason": "B correctly excludes blocked cases (106 executed, 92.5%) and flags both draft errors; A accepts 112 as executed."
+ },
+ "m04_ac_review.1": {
+  "stamp": "1795720805-1795720878",
+  "optimized": 8,
+  "original": 6,
+  "winner": "optimized",
+  "reason": "B is concise, flags the story-vs-AC5 conflict, gives PO questions and placeholder rewrites; A is padded, lacks questions and rewrites."
+ },
+ "m04_ac_review.2": {
+  "stamp": "1795720833-1795720901",
+  "optimized": 8,
+  "original": 6,
+  "winner": "optimized",
+  "reason": "A covers all required parts concisely, with PO questions and rewrites; B is thorough but padded, and lacks rewrites and questions."
+ },
+ "m04_ac_review.3": {
+  "stamp": "1795720859-1795720919",
+  "optimized": 8,
+  "original": 6,
+  "winner": "optimized",
+  "reason": "B is concise, cites exact faults, asks PO questions, gives bracketed testable rewrites; A is padded and invents assumptions."
+ },
+ "m05_browser_matrix": {
+  "stamp": "1795720925-1795720930-1795720936",
+  "score": 8,
+  "consistency": 10,
+  "reason": "Correct exclusions, real/cloud assignments and 15.75h total within budget; runs near-identical; ignores 'last 2 versions' nuance.",
+  "mode": "absolute"
+ }
+}
