@@ -35,9 +35,13 @@ QA Prompt Pack is a set of 33 prompts for the tasks testers hand to AI most: tes
 
 **Every prompt is tested, not just written.** Each one runs 3 times on the same input. The output is scored by deterministic checks (does the code compile and pass on a live demo? are the totals right? did it catch the planted contradiction?) and by a blind judge model that never sees either prompt.
 
+<p align="center">
+  <img src=".github/assets/results.svg" alt="Blind judge score per prompt, popular original vs ours" width="900" />
+</p>
+
 <table>
 <tr>
-<td width="40%" valign="middle">
+<td width="50%" valign="top">
 
 ### Better answers, not shorter prompts
 
@@ -50,35 +54,25 @@ Across the 16 prompts that have a popular public original (48 blind pairs), **ou
 The prompts themselves are about the same length (input +3%). The gain is in the answers.
 
 </td>
-<td width="60%">
-
-<img src=".github/assets/results.svg" alt="Blind judge score per prompt, popular original vs ours" width="100%" />
-
-</td>
-</tr>
-<tr>
-<td width="40%" valign="middle">
+<td width="50%" valign="top">
 
 ### Tested like code
 
-Automation answers must compile with `tsc` and pass against the live [TodoMVC demo](https://demo.playwright.dev/todomvc/) and [JSONPlaceholder](https://jsonplaceholder.typicode.com).
+Automation answers must compile with `tsc` and pass against the live [TodoMVC demo](https://demo.playwright.dev/todomvc/) and [JSONPlaceholder](https://jsonplaceholder.typicode.com). Manual answers are checked against synthetic inputs with planted traps.
 
-Manual answers are checked against synthetic inputs with planted traps.
+k6 scripts must pass `k6 inspect`, and locators must match the right element on the real page.
 
 The whole evaluation cost **$2.29** on Claude.
 
 </td>
-<td width="60%">
+</tr>
+</table>
 
 | Pack | Prompts | Result |
 |---|---|---|
-| Manual testing | 11 | 10 beat the original, 0 lost; m05 3/3 runs pass |
-| Automation testing | 6 | 5 beat, 1 matched, 0 lost |
-| Industry | 16 | 48/48 runs pass, judge 7.5/10 |
-
-</td>
-</tr>
-</table>
+| [Manual testing](#manual-testing-11) | 11 | 10 beat the original, 0 lost; m05 3/3 runs pass |
+| [Automation testing](#automation-testing-6) | 6 | 5 beat, 1 matched, 0 lost |
+| [Industry](#industry-16) | 16 | 48/48 runs pass, judge 7.5/10 |
 
 ---
 
